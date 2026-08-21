@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Kawya &amp; Ushan — Wedding Invitation</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream-bg:#F8F2E6;
+    --cream-deep:#ECE0C4;
+    --ink:#2E2218;
+    --ink-soft:#5B4C39;
+    --gold:#A9823F;
+    --gold-light:#C9A86A;
+    --gold-deep:#8A6A30;
+    --white-card:#FFFCF5;
+    --line:rgba(169,130,63,0.35);
+    --max-w:600px;
+    /* Single master lever for the fixed background-video layer's own
+       opacity/brightness across the WHOLE invitation — see
+       .site-bg-video video below. Sections additionally set their own
+       --section-tint (see each section's rules) to fade the video more
+       or less locally via their translucent ivory overlay; this variable
+       controls the video itself, globally, on top of that. Turn it down
+       (e.g. 0.85) if the video is ever too bright/busy behind text;
+       1 = current/original brightness, unchanged from before this was added. */
+    --bg-video-opacity:1;
+  }
+  *{box-sizing:border-box;}
+  /* ================= MOBILE HORIZONTAL CONTAINMENT ================= */
+  /* Root cause of the sideways drag on mobile: several elements are
+     INTENTIONALLY positioned partly outside their own section's box via
+     CSS transform — the Coverflow's side cards peek in from the screen
+     edges (translateX by up to ~half a card width, by design), and the
+     Love Story reveal-left/reveal-right text blocks sit 24px further
+     left/right than their resting position before they scroll into view
+     (also by design — that's the animation). A CSS `transform` does not
+     enlarge an element's layout box, but it DOES enlarge the *scrollable
+     overflow area* of the page unless some ancestor clips it. Previously
+     only <body> declared `overflow-x:hidden` — on iOS Safari in
+     particular, that alone is not always enough to stop the page itself
+     becoming a few pixels horizontally draggable when the overflowing
+     content comes from a transformed descendant, because propagation of
+     body's overflow to the viewport's scrolling element is inconsistent
+     here. Declaring the SAME horizontal clipping on <html> as well (the
+     actual scrolling element on most mobile browsers) closes that gap.
+     This is pure containment — it does not touch the Coverflow's own
+     transform math or the Love Story reveal transforms, so both keep
+     working exactly as before; only the invisible sliver of extra
+     scrollable width around them is removed. Vertical scrolling is
+     completely unaffected (only overflow-x / horizontal overscroll are
+     set here, never overflow-y). */
+  html{
+    overflow-x:hidden;
+    width:100%;
+    position:relative;
+    overscroll-behavior-x:none;
+  }
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream-bg);
+    color:var(--ink);
+    font-family:'Montserrat',sans-serif;
+    overflow-x:hidden;
+    width:100%;
+    position:relative;
+    overscroll-behavior-x:none;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{ max-width:var(--max-w); margin:0 auto; position:relative; min-height:100vh; }
+
+  /* ================= OPENING VIDEO / TAP TO OPEN ================= */
+  #cover{
+    position:fixed; top:0; left:0; right:0;
+    height:100vh; height:100svh; height:100dvh;
+    background:#000; z-index:40; overflow:hidden;
+    transition:opacity 0.55s ease;
+  }
+  #cover.cover-hidden{ opacity:0; pointer-events:none; }
+  #cover.cover-gone{ display:none; }
+  #openingVideo{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; display:block; background:#000;
+  }
+  .tap-cue{
+    position:absolute; left:50%; bottom:9%;
+    transform:translateX(-50%); z-index:2;
+    opacity:0; animation:tapCueIn 0.9s ease-out forwards; animation-delay:0.4s;
+    transition:opacity 0.4s ease, transform 0.4s ease;
+  }
+  .tap-cue.tap-cue-hidden{
+    opacity:0 !important; transform:translateX(-50%) translateY(6px); pointer-events:none;
+  }
+  @keyframes tapCueIn{
+    from{ opacity:0; transform:translateX(-50%) translateY(10px); }
+    to{ opacity:1; transform:translateX(-50%) translateY(0); }
+  }
+  .tap-to-open-btn{
+    border:1px solid rgba(201,168,106,0.85);
+    background:rgba(248,242,230,0.92);
+    color:var(--gold-deep);
+    font-family:'Montserrat',sans-serif;
+    letter-spacing:0.3em; font-size:0.78rem; text-transform:uppercase;
+    padding:14px 30px; border-radius:2px; cursor:pointer;
+    box-shadow:0 8px 22px rgba(0,0,0,0.28);
+    animation:tapBreathe 2.6s ease-in-out infinite;
+  }
+  @keyframes tapBreathe{ 0%,100%{ opacity:0.88; } 50%{ opacity:1; } }
+  .cover-flash{
+    position:absolute; inset:0; z-index:3;
+    background:radial-gradient(circle at 50% 42%, #FFFDF6, var(--cream-bg) 72%);
+    opacity:0; pointer-events:none;
+  }
+  .cover-flash.flash-on{ animation:coverFlash 0.7s ease-in-out forwards; }
+  @keyframes coverFlash{
+    0%{ opacity:0; } 32%{ opacity:0.97; } 58%{ opacity:0.97; } 100%{ opacity:0; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .tap-to-open-btn{ animation:none; }
+    .tap-cue{ animation:none; opacity:1; }
+  }
+
+  /* ================= MAIN ================= */
+  #main{ display:none; opacity:0; transform:scale(0.93); }
+  #main.visible{ display:block; }
+  #main.zoomed{ opacity:1; transform:scale(1); transition:opacity 0.65s ease-out, transform 0.65s ease-out; }
+
+  /* ================= HERO ================= */
+  /* Ivory-first composition: eyebrow, then a bounded framed photo (not
+     full-bleed), then the couple's info sitting directly on the cream
+     background — nothing depends on the photograph's own contrast. */
+  #hero{
+    position:relative;
+    min-height:100vh; min-height:100svh; min-height:100dvh;
+    width:100%;
+    background:transparent; /* was var(--cream-bg) — now transparent so the
+      viewport-level .site-bg-video layer (see below) shows through the Hero
+      the same way it always visually did; .site-bg-scrim still provides the
+      exact same readability the old .hero-bg-scrim did, just at document
+      level instead of Hero-only. This is the one necessary side-effect of
+      moving the video out of #hero: keeping this opaque would silently hide
+      the video everywhere, since an element's own background always paints
+      above anything positioned behind it. */
+    display:flex; flex-direction:column; align-items:center; justify-content:space-evenly;
+    padding:calc(30px + env(safe-area-inset-top)) 26px calc(20px + env(safe-area-inset-bottom));
+    text-align:center;
+    overflow:hidden;
+  }
+
+  /* ================= SITE-LEVEL BACKGROUND VIDEO ================= */
+  /* Previously the background video lived INSIDE #hero as
+     position:absolute; inset:0 — which sizes it to #hero's own box, so it
+     was confined to Hero's height. Moved here: a fixed, viewport-sized
+     layer that is a sibling of #main (never a descendant of it, so it is
+     unaffected by #main's own scale() transform during the opening
+     reveal), sitting behind all invitation content and never intercepting
+     input. Same object-fit:cover / same scrim tint as before — only the
+     positioning architecture changed. */
+  .site-bg-video{
+    position:fixed; inset:0;
+    width:100%; height:100%;
+    overflow:hidden;
+    z-index:0;
+    pointer-events:none;
+  }
+  .site-bg-video video{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover; object-position:center center;
+    display:block;
+    pointer-events:none;
+    opacity:var(--bg-video-opacity);
+  }
+  .site-bg-scrim{
+    position:absolute; inset:0;
+    /* was 0.62 — lowered to ~45% so the background video reads clearly
+       through Hero (and everywhere else, alongside each section's own
+       lighter overlay below) instead of being nearly invisible outside
+       Hero. Same ivory tint colour, only the alpha changed. */
+    background:rgba(248,242,230,0.45);
+    pointer-events:none;
+  }
+  /* #main sits above the fixed background layer; established once here
+     rather than re-declared per-section. */
+  #main{ position:relative; z-index:1; }
+
+  .eyebrow{
+    font-family:'Montserrat',sans-serif;
+    font-size:0.76rem; letter-spacing:0.32em; text-transform:uppercase;
+    color:var(--gold-deep);
+    margin:0;
+  }
+
+  /* ===== HERO COVERFLOW — five photos in a 3D depth carousel =====
+     The active/center card keeps the exact footprint the single framed
+     photo previously used (min(70vw,300px), 4:5) — that size is approved
+     and unchanged. Side cards are the same element, just scaled down and
+     pushed outward by the JS below, so the "large dominant center photo"
+     requirement holds automatically. */
+  :root{ --hero-photo-w: min(70vw, 300px); }
+  .coverflow{
+    position:relative;
+    width:100%;
+    height:calc(var(--hero-photo-w) * 1.25);
+    margin:0 auto;
+    perspective:1300px;
+    touch-action:pan-y;
+    -webkit-user-select:none;
+    user-select:none;
+    flex-shrink:0;
+  }
+  .cf-track{
+    position:relative;
+    width:100%; height:100%;
+    transform-style:preserve-3d;
+  }
+  .cf-item{
+    position:absolute;
+    top:0; left:50%;
+    width:var(--hero-photo-w);
+    height:calc(var(--hero-photo-w) * 1.25);
+    margin-left:calc(var(--hero-photo-w) / -2);
+    border-radius:8px;
+    overflow:hidden;
+    background:var(--white-card);
+    border:1.25px solid var(--gold-light);
+    box-shadow:0 18px 40px rgba(60,44,18,0.24), 0 3px 10px rgba(60,44,18,0.12);
+    transition:transform .55s cubic-bezier(.22,.68,.2,1), opacity .5s ease, box-shadow .5s ease, filter .5s ease;
+    will-change:transform, opacity, filter;
+    cursor:grab;
+  }
+  .cf-item.dragging{ transition:none; cursor:grabbing; }
+  /* used for exactly one frame on page load — see the JS init sequence.
+     Without this, the browser treats the very first render() call as an
+     animatable change from the default stacked/overlapping state into the
+     calculated Coverflow positions, which reads as ghosting/overlap. */
+  .cf-track.cf-initializing .cf-item{ transition:none !important; }
+  /* calmer, more cinematic speed used only while an automatic (non-user)
+     move is in flight — manual swipes keep the snappier default above */
+  .cf-track.cf-auto-move .cf-item{
+    transition:transform 1.5s cubic-bezier(.33,.02,.18,1), opacity 1.4s ease, box-shadow .5s ease, filter 1.4s ease;
+  }
+  .cf-item img{
+    width:100%; height:100%; object-fit:cover; object-position:center 30%;
+    display:block;
+    pointer-events:none;
+    -webkit-user-drag:none;
+  }
+  .cf-item.is-active{ box-shadow:0 22px 46px rgba(60,44,18,0.3), 0 4px 14px rgba(60,44,18,0.14); }
+
+  .hero-dots{
+    display:flex; justify-content:center; gap:8px;
+  }
+  .hero-dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--line);
+    transition:all .35s ease;
+  }
+  .hero-dot.active{ background:var(--gold); width:16px; border-radius:4px; }
+
+  .hero-info{ text-align:center; }
+  .names-big{
+    font-family:'Playfair Display',serif;
+    font-weight:600;
+    display:flex; flex-direction:column; align-items:center;
+    font-size:clamp(1.9rem, 7.4vw, 2.6rem);
+    line-height:1.16;
+    margin:0 0 16px;
+    color:var(--ink);
+  }
+  .names-big .name-line{ display:block; }
+  .names-big .amp-line{
+    display:block;
+    font-family:'Cormorant Garamond',serif;
+    font-style:italic;
+    color:var(--gold);
+    font-size:0.5em;
+    line-height:1;
+    margin:5px 0;
+  }
+  .hero-divider{ width:52px; height:1px; background:var(--line); margin:0 auto 16px; }
+  .hero-parents{
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    font-size:0.94rem; letter-spacing:0.03em; line-height:1.85;
+    color:var(--ink-soft);
+    margin:0;
+  }
+  .hero-parents-line{ display:block; }
+
+  .scroll-hint{
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+    opacity:0.75;
+  }
+  .scroll-hint span{
+    font-size:0.64rem; letter-spacing:0.3em; text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .scroll-hint .swipe-arrow{ font-size:0.85rem; color:var(--gold); animation:scrollPulse 1.8s ease-in-out infinite; }
+  @keyframes scrollPulse{
+    0%{ opacity:0.25; transform:translateY(0); }
+    50%{ opacity:1; transform:translateY(5px); }
+    100%{ opacity:0.25; transform:translateY(0); }
+  }
+
+  /* short-viewport tiers — shrink the frame + type so the whole Hero still
+     fits one screen without cramming (same approach as the Chalitha ref) */
+  @media (max-height:720px){
+    :root{ --hero-photo-w: min(62vw, 250px); }
+    .names-big{ font-size:clamp(1.7rem, 6.6vw, 2.3rem); }
+  }
+  @media (max-height:620px){
+    #hero{ padding-top:calc(18px + env(safe-area-inset-top)); }
+    :root{ --hero-photo-w: min(52vw, 210px); }
+    .names-big{ font-size:clamp(1.5rem, 6vw, 2rem); margin-bottom:10px; }
+    .hero-divider{ margin-bottom:10px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .cf-item{ transition:opacity .5s ease; }
+    .cf-track.cf-auto-move .cf-item{ transition:opacity .5s ease; }
+  }
+
+  /* ================= FULLSCREEN PHOTO VIEWER ================= */
+  #lightbox{
+    position:fixed; inset:0; z-index:50;
+    background:rgba(12,9,5,0.94);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity 0.4s ease;
+  }
+  #lightbox.open{ opacity:1; pointer-events:auto; }
+  #lightbox img{
+    max-width:92vw; max-height:86vh;
+    object-fit:contain;
+    border-radius:4px;
+    box-shadow:0 24px 70px rgba(0,0,0,0.55);
+    transform:scale(0.92);
+    transition:transform 0.4s cubic-bezier(.22,.68,.2,1);
+  }
+  #lightbox.open img{ transform:scale(1); }
+  .lightbox-close{
+    position:absolute; top:calc(18px + env(safe-area-inset-top)); right:20px;
+    width:40px; height:40px; border-radius:50%;
+    background:rgba(248,242,230,0.14);
+    border:1px solid rgba(248,242,230,0.4);
+    color:var(--white-card);
+    font-size:1.2rem; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+
+  /* ================= MUSIC TOGGLE ================= */
+  .music-toggle{
+    position:fixed; z-index:45;
+    top:calc(16px + env(safe-area-inset-top)); right:16px;
+    width:38px; height:38px; border-radius:50%;
+    background:rgba(248,242,230,0.92);
+    border:1px solid var(--gold-light);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--gold-deep);
+    cursor:pointer;
+    box-shadow:0 6px 16px rgba(60,44,18,0.18);
+    opacity:0; pointer-events:none;
+    transition:opacity 0.5s ease;
+  }
+  .music-toggle.visible{ opacity:1; pointer-events:auto; }
+  .music-toggle svg{ width:17px; height:17px; display:block; }
+  .music-toggle .icon-muted{ display:none; }
+  .music-toggle.is-muted .icon-on{ display:none; }
+  .music-toggle.is-muted .icon-muted{ display:block; }
+
+  /* ================= BEFORE WE SAY "I DO" — combined romantic section =================
+     Replaces the earlier romantic transition section with one compact,
+     elegant romantic introduction: heading, two short
+     lines of copy, a "Together With Our Families" line, an invitation
+     line, and ONE feature photo in an elegant architectural arch frame.
+     Same translucent-ivory-over-video treatment and .reveal-io pattern
+     as the rest of the invitation. */
+  .before-ido-section{
+    position:relative;
+    padding:88px 26px 96px;
+    text-align:center;
+    background:rgba(248,242,230,0.49);
+  }
+  .bi-inner{ max-width:420px; margin:0 auto; }
+  .bi-heading{
+    font-family:'Playfair Display',serif; font-weight:600;
+    font-size:clamp(1.5rem, 6vw, 1.9rem);
+    letter-spacing:0.02em; line-height:1.3;
+    color:var(--ink); margin:0 0 22px;
+  }
+  .bi-text{
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    color:var(--ink-soft); font-size:1.08rem; line-height:1.62;
+    max-width:370px; margin:0 auto 16px;
+  }
+  .bi-family-heading{
+    font-family:'Montserrat',sans-serif;
+    font-size:0.74rem; letter-spacing:0.28em; text-transform:uppercase;
+    color:var(--gold-deep);
+    margin:34px 0 16px;
+  }
+  .bi-invite-line{
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    color:var(--ink-soft); font-size:1.05rem; line-height:1.6;
+    max-width:340px; margin:0 auto 26px;
+  }
+
+  /* ---- feature photo — elegant architectural wedding-arch frame:
+     soft arch shape at the top (built via CSS border-radius overlap
+     clamping, so it scales automatically to any width — no fixed
+     breakpoint math needed), thin champagne-gold outline, refined
+     ivory mat, subtle depth shadow and a very soft gold glow behind.
+     Minimal, editorial, no illustrated botanical elements. ---- */
+  .bi-frame-wrap{
+    position:relative;
+    width:min(70vw, 280px);
+    aspect-ratio:4/5;
+    margin:48px auto 14px;
+  }
+  .bi-arch-glow{
+    position:absolute;
+    left:50%; top:6%;
+    transform:translateX(-50%);
+    width:82%; height:56%;
+    background:radial-gradient(closest-side, rgba(201,168,106,0.32), rgba(201,168,106,0) 72%);
+    filter:blur(16px);
+    pointer-events:none;
+    z-index:1;
+  }
+  .bi-frame-outer{
+    position:absolute; inset:0;
+    border-radius:999px 999px 14px 14px;
+    background:var(--white-card);
+    padding:9px;
+    box-shadow:0 24px 50px rgba(60,44,18,0.24), 0 5px 16px rgba(60,44,18,0.12);
+    z-index:2;
+  }
+  .bi-frame-photo{
+    position:relative;
+    width:100%; height:100%;
+    border-radius:999px 999px 8px 8px;
+    overflow:hidden;
+    border:1.25px solid var(--gold-light);
+  }
+  .bi-frame-photo img{
+    width:100%; height:100%; object-fit:cover; object-position:center 28%;
+    display:block;
+    animation:biKenBurns 14s ease-in-out infinite alternate;
+    animation-play-state:paused;
+  }
+  .bi-frame-wrap.in-view .bi-frame-photo img{ animation-play-state:running; }
+  @keyframes biKenBurns{
+    from{ transform:scale(1.04); }
+    to{ transform:scale(1.14); }
+  }
+
+  @media (max-width:380px){
+    .bi-frame-wrap{ width:min(64vw, 250px); margin-top:42px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .bi-frame-photo img{ animation:none !important; }
+  }
+
+
+  /* ================= A FEW MORE MOMENTS — closing editorial gallery =================
+     Deliberately different from the Hero Coverflow: a curated, varied-size
+     editorial arrangement rather than a carousel. Sits after RSVP and
+     before the final designer credit. */
+  .moments-section{
+    padding:86px 22px 70px;
+    text-align:center;
+    --section-tint:0.46;
+    background:rgba(248,242,230,var(--section-tint));
+  }
+  .moments-heading{
+    font-family:'Montserrat',sans-serif;
+    font-size:0.78rem; letter-spacing:0.3em; text-transform:uppercase;
+    color:var(--gold-deep);
+    line-height:1.9; margin:0 0 40px;
+  }
+  .moments-grid{
+    display:grid;
+    grid-template-columns:1.08fr 0.92fr;
+    grid-auto-rows:min-content;
+    gap:14px;
+    max-width:420px;
+    margin:0 auto;
+  }
+  .moment-fig{
+    margin:0;
+    border-radius:12px;
+    overflow:hidden;
+    background:var(--white-card);
+    border:1px solid rgba(169,130,63,0.28);
+    box-shadow:0 14px 30px rgba(60,44,18,0.18), 0 3px 10px rgba(60,44,18,0.1);
+  }
+  .moment-fig img{
+    display:block; width:100%; height:100%;
+    object-fit:cover;
+    animation:biKenBurns 16s ease-in-out infinite alternate;
+    animation-play-state:paused;
+  }
+  .moment-fig.in-view img{ animation-play-state:running; }
+  .moment-01{ grid-column:1; grid-row:1 / span 2; aspect-ratio:3/4.1; }
+  .moment-02{ grid-column:2; grid-row:1; aspect-ratio:1/1.05; margin-top:30px; transform:rotate(1.1deg); }
+  .moment-03{ grid-column:2; grid-row:2; aspect-ratio:4/4.6; transform:rotate(-1deg); }
+  .moment-04{ grid-column:1 / span 2; aspect-ratio:16/10; margin-top:2px; }
+
+  @media (max-width:360px){
+    .moments-grid{ gap:10px; }
+    .moment-02{ margin-top:20px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .moment-fig img{ animation:none !important; }
+  }
+
+  /* ---- reveal-scale modifier — used by moment-04 (fade + subtle scale) ---- */
+  .reveal-scale{ transform:scale(0.93); }
+
+  /* ---- final designer credit, now standing alone as the very last
+     element on the page, after A Few More Moments ---- */
+  .final-credit-wrap{
+    padding:0 26px 56px;
+    text-align:center;
+  }
+
+  /* ---- generic scroll reveal, reused across every section below the
+     Hero (Before We Say I Do, Wedding Details, Location, RSVP, Moments) ---- */
+  .reveal-io{
+    opacity:0;
+    transition:opacity .85s cubic-bezier(.22,.68,.2,1), transform .85s cubic-bezier(.22,.68,.2,1);
+    transition-delay:var(--d,0s);
+  }
+  .reveal-left{ transform:translateX(-24px); }
+  .reveal-right{ transform:translateX(24px); }
+  .reveal-up{ transform:translateY(16px); }
+  .reveal-io.in-view{ opacity:1; transform:none; }
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal-io{ transition:none !important; opacity:1 !important; transform:none !important; }
+  }
+
+
+  /* ================= WEDDING DETAILS + COUNTDOWN =================
+     Deliberately quiet next to the botanical vine above — no motif,
+     just the same small diamond ornament / uppercase Montserrat heading
+     / thin gold divider language already used elsewhere, generous
+     vertical spacing, and content sitting straight on the translucent
+     ivory overlay (no card/box). Reveal reuses the existing generic
+     .reveal-io utility (see the JS observer added below) rather than a
+     bespoke animation system. */
+  .details-section{
+    padding:100px 30px 92px;
+    text-align:center;
+    /* local video-visibility lever for this section only — see
+       --bg-video-opacity above for the global one. Raise toward 1 to fade
+       the video more here; lower it to let more of it show through.
+       Lowered from 0.80 to ~0.49 so the video is clearly visible. */
+    --section-tint:0.49;
+    background:rgba(248,242,230,var(--section-tint));
+  }
+  .details-ornament{
+    width:7px; height:7px; margin:0 auto 24px;
+    background:var(--gold);
+    transform:rotate(45deg);
+  }
+  .details-heading{
+    font-family:'Montserrat',sans-serif;
+    font-size:0.78rem; letter-spacing:0.3em; text-transform:uppercase;
+    color:var(--gold-deep);
+    line-height:1.9; margin:0 0 24px;
+  }
+  .details-divider{
+    width:52px; height:1px; background:var(--line);
+    margin:0 auto 42px;
+  }
+  .details-date-block{ margin:0 0 48px; }
+  /* ---- Save the Date — same outlined gold/ivory button language as
+     .location-btn / .rsvp-action-btn, just a touch larger since it's the
+     one primary action in this section. Sits between the date/time block
+     and the venue, exactly like an ordinary piece of Details content. ---- */
+  .details-savedate-wrap{ margin:0 0 48px; }
+  .details-savedate-btn{
+    display:inline-flex; align-items:center; gap:9px;
+    font-family:'Montserrat',sans-serif;
+    letter-spacing:0.26em; font-size:0.7rem; text-transform:uppercase;
+    color:var(--gold-deep);
+    border:1px solid var(--gold-light);
+    background:rgba(255,252,245,0.7);
+    padding:13px 28px; border-radius:2px;
+    cursor:pointer;
+    transition:background .3s ease, box-shadow .3s ease;
+  }
+  .details-savedate-btn svg{ width:14px; height:14px; flex-shrink:0; }
+  .details-savedate-btn:active{ background:rgba(201,168,106,0.2); }
+  .details-date{
+    font-family:'Playfair Display',serif; font-weight:600;
+    font-size:clamp(1.5rem, 6.2vw, 1.9rem);
+    color:var(--ink);
+  }
+  .details-day{
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    font-size:1.05rem; letter-spacing:0.04em;
+    color:var(--gold-deep); margin-top:7px;
+  }
+  .details-grid{
+    display:flex; align-items:center; justify-content:center;
+    gap:28px; margin:0 0 52px;
+  }
+  .details-item-label{
+    font-family:'Montserrat',sans-serif;
+    font-size:0.66rem; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--ink-soft); margin:0 0 8px;
+  }
+  .details-item-time{
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    font-size:1.3rem; color:var(--ink);
+  }
+  .details-item-sep{ width:1px; height:34px; background:var(--line); flex-shrink:0; }
+  .details-venue{ margin:0 0 58px; }
+  .details-venue-label{
+    font-family:'Montserrat',sans-serif;
+    font-size:0.7rem; letter-spacing:0.22em; text-transform:uppercase;
+    color:var(--gold-deep); margin:0 0 10px;
+  }
+  .details-venue-name{
+    font-family:'Playfair Display',serif; font-weight:600;
+    font-size:clamp(1.15rem, 4.8vw, 1.4rem); color:var(--ink);
+  }
+  .details-venue-loc{
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    font-size:1rem; color:var(--ink-soft); margin-top:5px;
+  }
+
+  /* ---- countdown — quiet typography, not a widget: no boxes/cards,
+     just numerals + labels on a thin baseline, same palette as the rest
+     of the invitation. ---- */
+  .countdown-grid{
+    display:flex; align-items:flex-start; justify-content:center;
+    gap:18px; flex-wrap:wrap;
+  }
+  .cd-unit{ display:flex; flex-direction:column; align-items:center; min-width:66px; }
+  /* countdown numerals significantly enlarged (~1.6–1.8x the previous
+     clamp(1.55rem,6.4vw,2.05rem)) so they read as one of the visual
+     highlights of Wedding Details — same font, colour, logic and
+     labels, only scale/spacing changed */
+  .cd-num{
+    font-family:'Playfair Display',serif; font-weight:600;
+    font-size:clamp(2.5rem, 11vw, 3.6rem);
+    color:var(--gold-deep); line-height:1;
+    font-variant-numeric:tabular-nums;
+  }
+  .cd-label{
+    font-family:'Montserrat',sans-serif;
+    font-size:0.68rem; letter-spacing:0.22em; text-transform:uppercase;
+    color:var(--ink-soft); margin-top:12px;
+  }
+  .cd-colon{
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    color:var(--gold-light); font-size:1.9rem; margin-top:6px;
+  }
+  .countdown-complete{
+    display:none;
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    color:var(--gold-deep); font-size:1.15rem; margin:0;
+  }
+  /* completed state: swap numerals for a single quiet line instead of
+     ever showing negative numbers */
+  #countdown.is-complete .countdown-grid{ display:none; }
+  #countdown.is-complete .countdown-complete{ display:block; }
+
+  @media (max-width:380px){
+    .countdown-grid{ gap:10px; row-gap:20px; }
+    .cd-unit{ min-width:58px; }
+    .cd-num{ font-size:clamp(2.15rem, 13vw, 2.7rem); }
+    .cd-colon{ display:none; }
+    .details-grid{ gap:20px; }
+  }
+
+  /* ================= LOCATION ================= */
+  .location-section{
+    padding:96px 26px 118px;
+    text-align:center;
+    /* medium/strong visibility per the brief — lowered from 0.70 to ~0.43
+       so the video reads clearly here, a touch more than Details above */
+    --section-tint:0.43;
+    background:rgba(248,242,230,var(--section-tint));
+  }
+  .location-heading{
+    font-family:'Montserrat',sans-serif;
+    font-size:0.78rem; letter-spacing:0.3em; text-transform:uppercase;
+    color:var(--gold-deep);
+    line-height:1.9; margin:0 0 42px;
+  }
+  .location-photo-wrap{
+    max-width:480px; margin:0 auto 30px;
+    border-radius:10px;
+    overflow:hidden;
+    border:1.25px solid var(--gold-light);
+    box-shadow:0 20px 46px rgba(60,44,18,0.24), 0 4px 14px rgba(60,44,18,0.12);
+    background:var(--white-card);
+  }
+  .location-photo{
+    display:block; width:100%; height:auto;
+    aspect-ratio:3/2; object-fit:cover; object-position:center;
+    transform:scale(1.06);
+    transition:transform 1.6s cubic-bezier(.22,.68,.2,1);
+  }
+  /* very subtle settle-in scale, tied to the same one-shot reveal as the
+     rest of the section (see .reveal-io.in-view below) — not a
+     continuous/looping parallax, so it never fights for attention */
+  .location-photo-wrap.in-view .location-photo{ transform:scale(1); }
+  .location-caption{ margin:0 0 36px; }
+  .location-name{
+    font-family:'Playfair Display',serif; font-weight:600;
+    font-size:clamp(1.1rem, 4.6vw, 1.3rem); color:var(--ink);
+    text-transform:uppercase; letter-spacing:0.04em;
+  }
+  .location-place{
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    font-size:1rem; color:var(--ink-soft); margin-top:6px;
+    text-transform:uppercase; letter-spacing:0.08em;
+  }
+  .location-btn{
+    display:inline-block;
+    font-family:'Montserrat',sans-serif;
+    letter-spacing:0.28em; font-size:0.72rem; text-transform:uppercase;
+    color:var(--gold-deep);
+    border:1px solid var(--gold-light);
+    background:rgba(255,252,245,0.7);
+    padding:14px 34px; border-radius:2px;
+    text-decoration:none;
+    transition:background .3s ease, color .3s ease, box-shadow .3s ease;
+  }
+  .location-btn:active{ background:rgba(201,168,106,0.2); }
+
+  @media (prefers-reduced-motion: reduce){
+    .location-photo{ transition:none !important; transform:scale(1) !important; }
+  }
+
+  /* ================= RSVP / CLOSING =================
+     Final page of the invitation — deliberately the quietest section of
+     all: same small diamond ornament / uppercase Montserrat heading /
+     thin gold divider language already established by Parents, Details
+     and Location, so it reads as one more page of the same invitation,
+     not a bolted-on contact form. No cards, no boxes, no visible phone
+     numbers — just centered typography sitting straight on the
+     translucent ivory-over-video overlay, ending in a small, subtle
+     designer credit. */
+  .rsvp-section{
+    padding:96px 30px 74px;
+    text-align:center;
+    /* same translucent-ivory approach as Details/Location so the
+       background video stays visible through the closing page too */
+    --section-tint:0.46;
+    background:rgba(248,242,230,var(--section-tint));
+  }
+  .rsvp-ornament{
+    width:7px; height:7px; margin:0 auto 24px;
+    background:var(--gold);
+    transform:rotate(45deg);
+  }
+  .rsvp-heading{
+    font-family:'Montserrat',sans-serif;
+    font-size:0.78rem; letter-spacing:0.3em; text-transform:uppercase;
+    color:var(--gold-deep);
+    line-height:1.9; margin:0 0 16px;
+  }
+  .rsvp-message{
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    font-size:1.05rem; color:var(--ink-soft);
+    max-width:340px; margin:0 auto 42px; line-height:1.6;
+  }
+
+  /* thin ─── ◆ ─── ornament, built from CSS rather than the literal
+     characters so it scales cleanly and always matches --line/--gold */
+  .rsvp-divider{
+    display:flex; align-items:center; justify-content:center;
+    gap:14px; margin:0 auto 42px; max-width:220px;
+  }
+  .rsvp-divider .rsvp-divider-line{
+    flex:1; height:1px; background:var(--line);
+  }
+  .rsvp-divider .rsvp-divider-mark{
+    width:6px; height:6px; flex-shrink:0;
+    background:var(--gold); transform:rotate(45deg);
+  }
+
+  .rsvp-names{
+    font-family:'Playfair Display',serif; font-weight:600;
+    font-size:clamp(1.35rem, 5.6vw, 1.7rem);
+    color:var(--ink); margin:0 0 14px;
+  }
+  .rsvp-subtext{
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    font-size:1.05rem; color:var(--ink-soft);
+    margin:0 0 58px;
+  }
+
+  /* ---- couple contact — two quiet columns, no boxes, separated by the
+     same thin baseline used by the Countdown's --details-item-sep ---- */
+  .rsvp-contact{
+    display:flex; align-items:flex-start; justify-content:center;
+    gap:34px; margin:0 0 68px;
+  }
+  .rsvp-person{
+    display:flex; flex-direction:column; align-items:center;
+    min-width:0; flex:1; max-width:170px;
+  }
+  .rsvp-contact-sep{ width:1px; align-self:stretch; background:var(--line); flex-shrink:0; margin-top:4px; }
+  .rsvp-person-name{
+    font-family:'Playfair Display',serif; font-weight:600;
+    font-size:clamp(1.02rem, 4.2vw, 1.15rem); color:var(--ink);
+  }
+  .rsvp-person-role{
+    font-family:'Montserrat',sans-serif;
+    font-size:0.62rem; letter-spacing:0.22em; text-transform:uppercase;
+    color:var(--gold-deep); margin:6px 0 18px;
+  }
+  .rsvp-person-actions{
+    display:flex; align-items:center; justify-content:center;
+    gap:9px; flex-wrap:wrap;
+  }
+  .rsvp-action-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    font-family:'Montserrat',sans-serif;
+    letter-spacing:0.14em; font-size:0.64rem; text-transform:uppercase;
+    color:var(--gold-deep);
+    border:1px solid var(--gold-light);
+    background:rgba(255,252,245,0.6);
+    padding:8px 13px; border-radius:2px;
+    text-decoration:none; white-space:nowrap;
+    transition:background .3s ease, box-shadow .3s ease;
+  }
+  .rsvp-action-btn svg{ width:11px; height:11px; flex-shrink:0; }
+  .rsvp-action-btn:active{ background:rgba(201,168,106,0.22); }
+
+  @media (max-width:360px){
+    .rsvp-contact{ gap:18px; }
+    .rsvp-action-btn{ padding:8px 10px; letter-spacing:0.08em; }
+  }
+
+  /* ---- small subtle designer credit, always at the very bottom ---- */
+  .rsvp-credit{
+    font-family:'Montserrat',sans-serif;
+    font-size:0.66rem; letter-spacing:0.08em;
+    color:var(--ink-soft); opacity:0.75;
+  }
+  .rsvp-credit-label{ margin-right:4px; }
+  .rsvp-credit-name{
+    color:var(--gold-deep);
+    text-decoration:none;
+    border-bottom:1px solid var(--line);
+    padding-bottom:1px;
+    transition:color .3s ease, border-color .3s ease;
+  }
+  .rsvp-credit-name:active{ color:var(--gold); border-color:var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ===================== SITE-LEVEL BACKGROUND VIDEO ===================== -->
+  <!-- Viewport-fixed cinematic layer, sibling of #main (not a descendant of
+       it), so #main's own scale() transform during the opening reveal never
+       affects it. Muted/looping/pointer-events:none throughout; play() is
+       still triggered only from handleVideoEnded() after the Intro Video's
+       `ended` event, exactly as before — only its position in the DOM/CSS
+       changed, not when it starts. -->
+  <div class="site-bg-video" id="siteBgVideo">
+    <video
+      id="bgVideo"
+      muted
+      loop
+      playsinline
+      webkit-playsinline="true"
+      preload="auto"
+      disablePictureInPicture
+    ></video>
+    <div class="site-bg-scrim"></div>
+  </div>
+
+  <!-- ===================== COVER / TAP TO OPEN ===================== -->
+  <section id="cover">
+    <video
+      id="openingVideo"
+      preload="auto"
+      muted
+      playsinline
+      webkit-playsinline="true"
+      disablePictureInPicture
+    ></video>
+    <div class="tap-cue" id="tapCue">
+      <button class="tap-to-open-btn" id="tapToOpenBtn" type="button" aria-label="Tap to open the wedding invitation">Tap to Open</button>
+    </div>
+    <div class="cover-flash" id="coverFlash"></div>
+  </section>
+
+  <!-- ===================== MAIN CONTENT ===================== -->
+  <div id="main">
+
+    <!-- HERO -->
+    <section id="hero">
+      <p class="eyebrow">You Are Cordially Invited</p>
+
+      <div class="coverflow" id="coverflow">
+        <div class="cf-track" id="cfTrack">
+          <div class="cf-item"><img src="photos/couple-1.jpg" alt="Kawya &amp; Ushan" draggable="false"></div>
+          <div class="cf-item"><img src="photos/couple-2.jpg" alt="Kawya &amp; Ushan" draggable="false"></div>
+          <div class="cf-item"><img src="photos/couple-3.jpg" alt="Kawya &amp; Ushan" draggable="false"></div>
+          <div class="cf-item"><img src="photos/couple-4.jpg" alt="Kawya &amp; Ushan" draggable="false"></div>
+          <div class="cf-item"><img src="photos/couple-5.jpg" alt="Kawya &amp; Ushan" draggable="false"></div>
+        </div>
+      </div>
+
+      <div class="hero-dots" id="heroDots"></div>
+
+      <div class="hero-info">
+        <h1 class="names-big">
+          <span class="name-line">Kawya Savindi</span>
+          <span class="amp-line">&amp;</span>
+          <span class="name-line">Ushan Pasindu</span>
+        </h1>
+        <div class="hero-divider"></div>
+        <p class="hero-parents">
+          <span class="hero-parents-line">Daughter of Mr. &amp; Mrs. Premalal</span>
+          <span class="hero-parents-line">Son of Mr. &amp; Mrs. Narasinghe</span>
+        </p>
+      </div>
+
+      <div class="scroll-hint">
+        <span>Swipe Down</span>
+        <div class="swipe-arrow">↓</div>
+      </div>
+    </section>
+
+    <!-- BEFORE WE SAY "I DO" -->
+    <section id="beforeido" class="before-ido-section">
+      <div class="bi-inner">
+        <h2 class="bi-heading reveal-io reveal-up" style="--d:0s">Before We Say &ldquo;I Do&rdquo;&hellip; &#10084;&#65039;</h2>
+        <p class="bi-text reveal-io reveal-up" style="--d:.08s">From the first glance to this beautiful moment, every little chapter has brought us closer to forever.</p>
+        <p class="bi-text reveal-io reveal-up" style="--d:.14s">With hearts full of love and gratitude, we are delighted to share this special day with the people who make our journey even more meaningful.</p>
+
+        <p class="bi-family-heading reveal-io reveal-up" style="--d:.2s">Together With Our Families</p>
+        <p class="bi-invite-line reveal-io reveal-up" style="--d:.26s">We invite you to celebrate with us as two hearts begin a lifetime together.</p>
+
+        <div class="bi-frame-wrap reveal-io reveal-up" id="biFrame" style="--d:.34s">
+          <div class="bi-arch-glow" aria-hidden="true"></div>
+          <div class="bi-frame-outer">
+            <div class="bi-frame-photo">
+              <img src="assets/photos/before-i-do/before-i-do.jpg" alt="Kawya &amp; Ushan" loading="lazy">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WEDDING DETAILS + COUNTDOWN -->
+    <section id="details" class="details-section">
+      <div class="details-ornament reveal-io reveal-up" style="--d:0s" aria-hidden="true"></div>
+      <p class="details-heading reveal-io reveal-up" style="--d:.1s">The Day We Say<br>&ldquo;I&nbsp;Do&rdquo;</p>
+      <div class="details-divider reveal-io reveal-up" style="--d:.2s"></div>
+
+      <div class="details-date-block reveal-io reveal-up" style="--d:.3s">
+        <div class="details-date">24 September 2026</div>
+        <div class="details-day">Thursday</div>
+      </div>
+
+      <div class="details-grid reveal-io reveal-up" style="--d:.4s">
+        <div class="details-item">
+          <div class="details-item-label">Poruwa Ceremony</div>
+          <div class="details-item-time">9:00 AM</div>
+        </div>
+        <div class="details-item-sep" aria-hidden="true"></div>
+        <div class="details-item">
+          <div class="details-item-label">Celebration Begins</div>
+          <div class="details-item-time">10:00 AM</div>
+        </div>
+      </div>
+
+      <div class="details-savedate-wrap reveal-io reveal-up" style="--d:.45s">
+        <button class="details-savedate-btn" type="button" id="saveTheDateBtn" aria-label="Save the date — download calendar event">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18"/><path d="M8 2.5v4"/><path d="M16 2.5v4"/><path d="M8 14l2 2 4-4"/></svg>
+          Save the Date
+        </button>
+      </div>
+
+      <div class="details-venue reveal-io reveal-up" style="--d:.5s">
+        <div class="details-venue-label">Venue</div>
+        <div class="details-venue-name">Araliya Beach Resort &amp; Spa</div>
+        <div class="details-venue-loc">Unawatuna</div>
+      </div>
+
+      <!-- countdown targets 24 Sep 2026, 10:00 AM local device time — see script -->
+      <div class="countdown reveal-io reveal-up" id="countdown" style="--d:.6s">
+        <div class="countdown-grid" id="countdownGrid">
+          <div class="cd-unit"><span class="cd-num" id="cdDays">00</span><span class="cd-label">Days</span></div>
+          <div class="cd-colon" aria-hidden="true">&middot;</div>
+          <div class="cd-unit"><span class="cd-num" id="cdHours">00</span><span class="cd-label">Hours</span></div>
+          <div class="cd-colon" aria-hidden="true">&middot;</div>
+          <div class="cd-unit"><span class="cd-num" id="cdMinutes">00</span><span class="cd-label">Minutes</span></div>
+          <div class="cd-colon" aria-hidden="true">&middot;</div>
+          <div class="cd-unit"><span class="cd-num" id="cdSeconds">00</span><span class="cd-label">Seconds</span></div>
+        </div>
+        <p class="countdown-complete" id="countdownComplete">The Celebration Has Begun &#10022;</p>
+      </div>
+    </section>
+
+    <!-- LOCATION -->
+    <section id="location" class="location-section">
+      <p class="location-heading reveal-io reveal-up" style="--d:0s">A Beautiful Place<br>to Begin Forever</p>
+
+      <div class="location-photo-wrap reveal-io reveal-up" style="--d:.15s">
+        <img class="location-photo" src="photos/venue-aerial.jpg" alt="Aerial view of Araliya Beach Resort &amp; Spa, Unawatuna" loading="lazy">
+      </div>
+
+      <div class="location-caption reveal-io reveal-up" style="--d:.28s">
+        <div class="location-name">Araliya Beach Resort &amp; Spa</div>
+        <div class="location-place">Unawatuna</div>
+      </div>
+
+      <!-- Directions URL uses Google's documented cross-platform "Maps
+           URLs" scheme (maps/dir/?api=1&destination=...): it opens the
+           native Google Maps app on iOS/Android when installed (via
+           universal/app links) and falls back to Google Maps in the
+           browser otherwise — no custom device-sniffing needed. Origin
+           is left unset so Maps uses the visitor's current location
+           automatically. destination is the venue's exact coordinates,
+           resolved and verified from the Google Maps link that was
+           supplied (Araliya Beach Resort & Spa, Unawatuna), so the pin
+           is precise rather than relying on text geocoding. -->
+      <a class="location-btn reveal-io reveal-up" style="--d:.4s" href="https://www.google.com/maps/dir/?api=1&amp;destination=6.0084763,80.2424733&amp;travelmode=driving" target="_blank" rel="noopener noreferrer">Get Directions</a>
+    </section>
+
+    <!-- RSVP / CLOSING -->
+    <section id="rsvp" class="rsvp-section">
+      <div class="rsvp-ornament reveal-io reveal-up" style="--d:0s" aria-hidden="true"></div>
+      <p class="rsvp-heading reveal-io reveal-up" style="--d:.08s">RSVP</p>
+      <p class="rsvp-message reveal-io reveal-up" style="--d:.16s">We would be delighted to celebrate this special day with you.</p>
+
+      <div class="rsvp-divider reveal-io reveal-up" style="--d:.24s" aria-hidden="true">
+        <span class="rsvp-divider-line"></span>
+        <span class="rsvp-divider-mark"></span>
+        <span class="rsvp-divider-line"></span>
+      </div>
+
+      <p class="rsvp-names reveal-io reveal-up" style="--d:.3s">Kawya &amp; Ushan</p>
+      <p class="rsvp-subtext reveal-io reveal-up" style="--d:.36s">We can&rsquo;t wait to celebrate with you.</p>
+
+      <div class="rsvp-contact reveal-io reveal-up" style="--d:.42s">
+        <div class="rsvp-person">
+          <div class="rsvp-person-name">Kawya</div>
+          <div class="rsvp-person-role">Bride</div>
+          <div class="rsvp-person-actions">
+            <a class="rsvp-action-btn" href="tel:+94781272603" aria-label="Call Kawya">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              Call
+            </a>
+            <a class="rsvp-action-btn" href="https://wa.me/94781272603" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Kawya">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0 0 12.05 4a7.94 7.94 0 0 0-6.9 11.9L4 20l4.2-1.1a7.9 7.9 0 0 0 3.85 1h.01a7.94 7.94 0 0 0 5.54-13.58zm-5.55 12.2h-.01a6.6 6.6 0 0 1-3.36-.92l-.24-.14-2.5.66.67-2.44-.16-.25a6.6 6.6 0 1 1 5.6 3.09zm3.62-4.94c-.2-.1-1.17-.58-1.35-.64-.18-.07-.31-.1-.44.1-.13.2-.5.64-.62.77-.11.13-.23.14-.42.05a5.4 5.4 0 0 1-1.6-.99 6 6 0 0 1-1.1-1.37c-.12-.2-.01-.3.09-.4.09-.1.2-.23.3-.35.1-.11.13-.19.2-.32.06-.13.03-.24-.02-.34-.05-.1-.44-1.06-.6-1.45-.16-.38-.32-.33-.44-.33h-.38c-.13 0-.34.05-.51.24-.18.2-.67.65-.67 1.6s.68 1.86.78 1.99c.09.13 1.34 2.05 3.26 2.87.45.2.81.32 1.09.4.46.15.87.13 1.2.08.37-.06 1.17-.48 1.33-.94.17-.46.17-.86.12-.94-.05-.09-.18-.14-.38-.24z"/></svg>
+              WhatsApp
+            </a>
+          </div>
+        </div>
+        <div class="rsvp-contact-sep" aria-hidden="true"></div>
+        <div class="rsvp-person">
+          <div class="rsvp-person-name">Ushan</div>
+          <div class="rsvp-person-role">Groom</div>
+          <div class="rsvp-person-actions">
+            <a class="rsvp-action-btn" href="tel:+9478596132" aria-label="Call Ushan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              Call
+            </a>
+            <a class="rsvp-action-btn" href="https://wa.me/9478596132" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Ushan">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0 0 12.05 4a7.94 7.94 0 0 0-6.9 11.9L4 20l4.2-1.1a7.9 7.9 0 0 0 3.85 1h.01a7.94 7.94 0 0 0 5.54-13.58zm-5.55 12.2h-.01a6.6 6.6 0 0 1-3.36-.92l-.24-.14-2.5.66.67-2.44-.16-.25a6.6 6.6 0 1 1 5.6 3.09zm3.62-4.94c-.2-.1-1.17-.58-1.35-.64-.18-.07-.31-.1-.44.1-.13.2-.5.64-.62.77-.11.13-.23.14-.42.05a5.4 5.4 0 0 1-1.6-.99 6 6 0 0 1-1.1-1.37c-.12-.2-.01-.3.09-.4.09-.1.2-.23.3-.35.1-.11.13-.19.2-.32.06-.13.03-.24-.02-.34-.05-.1-.44-1.06-.6-1.45-.16-.38-.32-.33-.44-.33h-.38c-.13 0-.34.05-.51.24-.18.2-.67.65-.67 1.6s.68 1.86.78 1.99c.09.13 1.34 2.05 3.26 2.87.45.2.81.32 1.09.4.46.15.87.13 1.2.08.37-.06 1.17-.48 1.33-.94.17-.46.17-.86.12-.94-.05-.09-.18-.14-.38-.24z"/></svg>
+              WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- A FEW MORE MOMENTS -->
+    <section id="moments" class="moments-section">
+      <p class="moments-heading reveal-io reveal-up" style="--d:0s">A Few More Moments</p>
+
+      <div class="moments-grid">
+        <figure class="moment-fig moment-01 reveal-io reveal-up" style="--d:.06s">
+          <img src="assets/photos/moments/moment-01.jpg" alt="Kawya &amp; Ushan" loading="lazy">
+        </figure>
+        <figure class="moment-fig moment-02 reveal-io reveal-left" style="--d:.14s">
+          <img src="assets/photos/moments/moment-02.jpg" alt="Kawya &amp; Ushan" loading="lazy">
+        </figure>
+        <figure class="moment-fig moment-03 reveal-io reveal-right" style="--d:.2s">
+          <img src="assets/photos/moments/moment-03.jpg" alt="Kawya &amp; Ushan" loading="lazy">
+        </figure>
+        <figure class="moment-fig moment-04 reveal-io reveal-scale" style="--d:.28s">
+          <img src="assets/photos/moments/moment-04.jpg" alt="Kawya &amp; Ushan" loading="lazy">
+        </figure>
+      </div>
+    </section>
+
+    <!-- FINAL DESIGNER BRANDING -->
+    <div class="final-credit-wrap">
+      <p class="rsvp-credit reveal-io reveal-up" style="--d:0s">
+        <span class="rsvp-credit-label">Design by</span><a class="rsvp-credit-name" href="https://wa.me/94766527700" target="_blank" rel="noopener">Nevinda Rushantha</a>
+      </p>
+    </div>
+
+  </div>
+
+  <!-- ===================== FULLSCREEN PHOTO VIEWER ===================== -->
+  <div id="lightbox">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close photo">&times;</button>
+    <img id="lightboxImg" src="" alt="Kawya &amp; Ushan">
+  </div>
+
+  <!-- ===================== BACKGROUND MUSIC ===================== -->
+  <audio id="bgMusic" preload="auto" loop></audio>
+  <button class="music-toggle" id="musicToggle" type="button" aria-label="Toggle music">
+    <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>
+    <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
+  </button>
+
+</div>
+
+<script>
+  function assetUrl(relPath){
+    return (location.protocol === 'file:') ? relPath : ('/' + relPath);
+  }
+
+  /* ===================== HERO COVERFLOW ===================== */
+  /* True Coverflow photo carousel, adapted from the Chalitha reference
+     implementation (.cf-item / .cf-track / .cf-auto-move mechanics) but
+     re-tuned for K&U: card size is read live from CSS (var(--hero-photo-w),
+     the approved center-photo size) instead of Chalitha's fixed pixel
+     dimensions, so the "keep the current center photo size" requirement
+     holds at every breakpoint automatically. */
+  (function(){
+    const track = document.getElementById('cfTrack');
+    const dotsWrap = document.getElementById('heroDots');
+    if(!track) return;
+    const items = Array.from(track.querySelectorAll('.cf-item'));
+    const count = items.length;
+    let active = 0; // Photo 1 is always the initial active/center image
+    let paused = false; // true while the lightbox is open
+
+    items.forEach((_, i) => {
+      const d = document.createElement('span');
+      d.className = 'hero-dot' + (i === active ? ' active' : '');
+      dotsWrap.appendChild(d);
+    });
+    const dots = Array.from(dotsWrap.children);
+
+    // shortest circular distance from `active` to `i` (count=5: 4→0 is +1, not -4)
+    function circularDiff(i, active, count){
+      let diff = i - active;
+      if (diff > count / 2) diff -= count;
+      if (diff < -count / 2) diff += count;
+      return diff;
+    }
+
+    function render(){
+      const cardW = items[0].offsetWidth || 1;
+      items.forEach((item, i) => {
+        const diff = circularDiff(i, active, count);
+        const abs = Math.abs(diff);
+        const dir = Math.sign(diff);
+        const tx = diff * cardW * 0.62;
+        const scale = abs === 0 ? 1 : Math.max(0.68, 1 - abs * 0.16);
+        const rot = dir * Math.min(abs, 1) * 28 - (abs > 1 ? dir * (abs - 1) * 5 : 0);
+        const z = abs > 2 ? 0 : Math.max(0, 1 - abs * 0.32);
+        const zi = 10 - abs;
+        // depth-of-field — only the centered photo stays crystal clear
+        const blur = abs === 0 ? 0 : Math.min(4, abs * 2);
+        item.style.transform = `translateX(${tx}px) scale(${scale}) rotateY(${-rot}deg)`;
+        item.style.opacity = abs > 2.4 ? 0 : z.toFixed(2);
+        item.style.filter = blur > 0 ? `blur(${blur.toFixed(2)}px)` : 'none';
+        item.style.zIndex = zi;
+        item.style.pointerEvents = abs > 2 ? 'none' : 'auto';
+        item.classList.toggle('is-active', i === active);
+      });
+      dots.forEach((d, i) => d.classList.toggle('active', i === active));
+    }
+
+    // ---------- autoplay ----------
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let autoplayEnabled = false;
+    let autoplayTimer = null;
+
+    function holdMs(){ return 5000 + Math.random() * 1000; } // 5–6s per photo
+
+    function resetTimer(){
+      if (!autoplayEnabled) return;
+      clearTimeout(autoplayTimer);
+      autoplayTimer = setTimeout(advance, holdMs());
+    }
+
+    function advance(){
+      if (!autoplayEnabled) return;
+      if (paused || document.hidden){
+        autoplayTimer = setTimeout(advance, 700);
+        return;
+      }
+      track.classList.add('cf-auto-move'); // calmer, cinematic speed for this move only
+      goTo(active + 1);
+      setTimeout(() => track.classList.remove('cf-auto-move'), 1700);
+    }
+
+    function goTo(i){
+      active = ((i % count) + count) % count; // wraps both directions
+      render();
+      resetTimer(); // every move (manual or automatic) gets a fresh viewing window
+    }
+
+    dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+
+    // ---------- tap / drag ----------
+    // NOTE: items no longer have their own 'click' listeners. Root cause of
+    // the "photo not reliably tappable" bug was stage.setPointerCapture()
+    // being called unconditionally on pointerdown — once a pointer is
+    // captured by an ancestor, the browser can retarget the synthesized
+    // 'click' that follows pointerup to the CAPTURING element (#coverflow)
+    // instead of the .cf-item under the finger, so the per-item click
+    // listeners silently never fired on some browsers/gestures. Fix:
+    // capture is now deferred until real drag movement is confirmed, and a
+    // simple tap (no capture ever taken) is resolved directly from the
+    // element under the original pointerdown — no reliance on 'click' at all.
+    const stage = document.getElementById('coverflow');
+    let tracking = false, captured = false, startX = 0, currentX = 0, pointerId = null, downItem = null;
+    const DRAG_THRESHOLD = 8;
+
+    function itemFromEvent(e){
+      const el = e.target.closest ? e.target.closest('.cf-item') : null;
+      return el ? items.indexOf(el) : -1;
+    }
+
+    function onDown(e){
+      tracking = true;
+      captured = false;
+      pointerId = e.pointerId;
+      startX = e.clientX;
+      currentX = startX;
+      downItem = itemFromEvent(e);
+      paused = true; // pause autoplay for the duration of the gesture
+    }
+    function onMove(e){
+      if(!tracking || e.pointerId !== pointerId) return;
+      currentX = e.clientX;
+      if(!captured && Math.abs(currentX - startX) > DRAG_THRESHOLD){
+        // now — and only now — is this actually a drag, so take capture
+        captured = true;
+        if (stage.setPointerCapture) stage.setPointerCapture(pointerId);
+        items[active].classList.add('dragging');
+      }
+    }
+    function onUp(e){
+      if(!tracking || (e.pointerId !== undefined && e.pointerId !== pointerId)) return;
+      tracking = false;
+      paused = false;
+
+      if(!captured){
+        // plain tap, no drag ever started — act directly on the photo
+        // that was under the finger/cursor at pointerdown
+        if(downItem !== -1){
+          if(downItem !== active) goTo(downItem);
+          else openLightbox();
+        }
+        downItem = null;
+        return;
+      }
+
+      captured = false;
+      track.classList.remove('cf-auto-move'); // manual swipe always uses the snappy default speed
+      items[active].classList.remove('dragging');
+      const delta = currentX - startX;
+      const threshold = 42;
+      if(delta > threshold) goTo(active - 1);       // swipe right → previous photo
+      else if(delta < -threshold) goTo(active + 1);  // swipe left → next photo
+      else { render(); resetTimer(); }
+      downItem = null;
+    }
+
+    stage.addEventListener('pointerdown', onDown);
+    stage.addEventListener('pointermove', onMove);
+    stage.addEventListener('pointerup', onUp);
+    stage.addEventListener('pointercancel', onUp);
+
+    window.addEventListener('resize', render);
+
+    window.startHeroAutoplay = function(){
+      // Called exactly once, right as #main becomes visible (see
+      // handleVideoEnded below). This — not page-parse time — is the
+      // correct moment to compute the Coverflow layout: earlier, #main is
+      // still display:none, so items[0].offsetWidth is 0 and every photo's
+      // horizontal offset collapses to ~0, stacking all 5 photos almost
+      // exactly on top of each other (the double-exposure/ghosting bug).
+      // Now that the container has real width, render() produces the
+      // correct spaced-out layout — applied with transitions forcibly
+      // disabled and committed via a forced reflow + double rAF, so this
+      // first real frame never visibly animates in from the wrong state.
+      track.classList.add('cf-initializing');
+      render();
+      void track.offsetHeight; // force layout so the no-transition state is actually committed
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          track.classList.remove('cf-initializing');
+        });
+      });
+
+      if (reduceMotion || autoplayEnabled) return;
+      autoplayEnabled = true;
+      resetTimer();
+    };
+    window.setHeroPaused = function(p){ paused = p; if(!p) resetTimer(); };
+    window.getHeroActiveSrc = function(){ return items[active].querySelector('img').src; };
+  })();
+
+  /* ===================== FULLSCREEN PHOTO VIEWER ===================== */
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxClose = document.getElementById('lightboxClose');
+
+  function openLightbox(){
+    lightboxImg.src = window.getHeroActiveSrc();
+    lightbox.classList.add('open');
+    window.setHeroPaused(true); // Hero pauses exactly where it was — no reset
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox(){
+    lightbox.classList.remove('open');
+    window.setHeroPaused(false); // resumes from the same photo, carousel continues on
+    document.body.style.overflow = '';
+  }
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+
+  /* ===================== OPENING VIDEO / TAP TO OPEN ===================== */
+  const openingVideoEl = document.getElementById('openingVideo');
+  openingVideoEl.poster = assetUrl('assets/opening-poster.jpg');
+  openingVideoEl.src = assetUrl('assets/opening-video.mp4');
+
+  const bgVideoEl = document.getElementById('bgVideo');
+  bgVideoEl.poster = assetUrl('assets/background-poster.jpg');
+  bgVideoEl.src = assetUrl('assets/background-video.mp4');
+
+  const bgMusicEl = document.getElementById('bgMusic');
+  bgMusicEl.src = assetUrl('assets/music.mp3');
+
+  const cover = document.getElementById('cover');
+  const main = document.getElementById('main');
+  const openingVideo = openingVideoEl;
+  const tapCue = document.getElementById('tapCue');
+  const tapToOpenBtn = document.getElementById('tapToOpenBtn');
+  const coverFlash = document.getElementById('coverFlash');
+  let hasOpened = false;
+  let hasEndedHandled = false;
+
+  document.body.style.overflow = 'hidden';
+
+  function primeFirstFrame(){
+    try{
+      openingVideo.currentTime = 0;
+      const p = openingVideo.play();
+      if (p && p.then){
+        p.then(()=>{ openingVideo.pause(); openingVideo.currentTime = 0; }).catch(()=>{});
+      }
+    }catch(e){ /* poster image already covers this */ }
+  }
+  if (openingVideo.readyState >= 1){
+    primeFirstFrame();
+  } else {
+    openingVideo.addEventListener('loadedmetadata', primeFirstFrame, { once:true });
+  }
+
+  function startVideoOpening(){
+    if (hasOpened) return;
+    hasOpened = true;
+
+    tapCue.classList.add('tap-cue-hidden');
+
+    // the tap is the single user gesture that unlocks both the intro
+    // video AND the music — nothing else prompts for audio afterwards
+    bgMusicEl.currentTime = 0;
+    const musicPromise = bgMusicEl.play();
+    if (musicPromise && musicPromise.catch) musicPromise.catch(()=>{});
+
+    openingVideo.currentTime = 0;
+    const playPromise = openingVideo.play();
+    if (playPromise && playPromise.catch) playPromise.catch(()=>{});
+
+    openingVideo.addEventListener('ended', handleVideoEnded, { once:true });
+    openingVideo.addEventListener('timeupdate', function backupCheck(){
+      if (openingVideo.duration && openingVideo.currentTime >= openingVideo.duration - 0.1){
+        openingVideo.removeEventListener('timeupdate', backupCheck);
+        handleVideoEnded();
+      }
+    });
+  }
+
+  function handleVideoEnded(){
+    if (hasEndedHandled) return;
+    hasEndedHandled = true;
+
+    coverFlash.classList.add('flash-on');
+
+    setTimeout(()=>{
+      openingVideo.pause();
+
+      main.classList.add('visible');
+      main.classList.add('zoomed');
+      window.scrollTo({top:0, behavior:'instant'});
+
+      cover.classList.add('cover-hidden');
+      document.body.style.overflow = '';
+
+      // Background video begins exactly here — never earlier. Its poster
+      // (a real frame from the same clip) covers any load/decode delay so
+      // there is no black flash while it spins up.
+      const bgPlayPromise = bgVideoEl.play();
+      if (bgPlayPromise && bgPlayPromise.catch) bgPlayPromise.catch(()=>{});
+
+      musicToggle.classList.add('visible');
+
+      window.startHeroAutoplay();
+    }, 230);
+
+    setTimeout(()=>{ cover.classList.add('cover-gone'); }, 750);
+  }
+
+  tapToOpenBtn.addEventListener('click', startVideoOpening);
+  openingVideo.addEventListener('click', startVideoOpening);
+
+  /* ===================== MUSIC TOGGLE ===================== */
+  // Muting (rather than pausing) means unmuting resumes instantly from
+  // wherever the track already is — it never restarts from the beginning.
+  const musicToggle = document.getElementById('musicToggle');
+  musicToggle.addEventListener('click', () => {
+    bgMusicEl.muted = !bgMusicEl.muted;
+    musicToggle.classList.toggle('is-muted', bgMusicEl.muted);
+  });
+
+  /* ===================== SCROLL REVEAL — OUR FOREVER / DETAILS / LOCATION / RSVP ===================== */
+  /* One shared one-shot IntersectionObserver pattern for every remaining
+     .reveal-io element post-Hero (each already carries its own --d
+     stagger via inline style where relevant). Reveal happens once, the
+     moment an element enters the viewport, then unobserves — it never
+     re-triggers on scroll-back-up. prefers-reduced-motion is handled
+     entirely in CSS (final state, no transition), so this only needs to
+     add the trigger class regardless of that setting. */
+  (function(){
+    const targets = document.querySelectorAll('#beforeido .reveal-io, #details .reveal-io, #location .reveal-io, #rsvp .reveal-io, #moments .reveal-io, .final-credit-wrap .reveal-io');
+    if (!targets.length) return;
+    if (!('IntersectionObserver' in window)){
+      targets.forEach((el) => el.classList.add('in-view'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting){
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold:0.2, rootMargin:'0px 0px -8% 0px' });
+    targets.forEach((el) => io.observe(el));
+  })();
+
+  /* ===================== WEDDING COUNTDOWN ===================== */
+  /* Targets 24 September 2026, 10:00 AM using the constructor's local
+     (year, monthIndex, day, hours, minutes, seconds) form — this is
+     evaluated in the visitor's own device/browser timezone, never UTC,
+     per the brief. Updates every second; once the target is reached the
+     numeral grid is swapped for a single quiet completed-state line
+     instead of ever counting into negative numbers. */
+  (function(){
+    const countdownEl = document.getElementById('countdown');
+    if (!countdownEl) return;
+    const target = new Date(2026, 8, 24, 10, 0, 0);
+    const dEl = document.getElementById('cdDays');
+    const hEl = document.getElementById('cdHours');
+    const mEl = document.getElementById('cdMinutes');
+    const sEl = document.getElementById('cdSeconds');
+    let timer = null;
+
+    function pad(n){ return String(n).padStart(2, '0'); }
+
+    function tick(){
+      const diff = target.getTime() - Date.now();
+      if (diff <= 0){
+        countdownEl.classList.add('is-complete');
+        if (timer) clearInterval(timer);
+        return;
+      }
+      const totalSeconds = Math.floor(diff / 1000);
+      dEl.textContent = pad(Math.floor(totalSeconds / 86400));
+      hEl.textContent = pad(Math.floor((totalSeconds % 86400) / 3600));
+      mEl.textContent = pad(Math.floor((totalSeconds % 3600) / 60));
+      sEl.textContent = pad(totalSeconds % 60);
+    }
+
+    tick();
+    timer = setInterval(tick, 1000);
+  })();
+
+  /* ===================== SAVE THE DATE — .ics download ===================== */
+  /* Builds a standards-compliant iCalendar (RFC 5545) VEVENT from the
+     same approved wedding details already shown in the Details section
+     above (24 September 2026, Poruwa Ceremony 9:00 AM, Araliya Beach
+     Resort & Spa, Unawatuna) and hands the guest a downloadable .ics
+     file — the browser/OS then takes over exactly as it does for any
+     other calendar file, so the guest always confirms Add/Save
+     themselves; nothing is added to their calendar silently.
+     Times are written with TZID=Asia/Colombo (a small VTIMEZONE block is
+     included for maximum compatibility with strict parsers) so the event
+     stays pinned to Sri Lanka local time regardless of the guest's own
+     device timezone. */
+  (function(){
+    const btn = document.getElementById('saveTheDateBtn');
+    if (!btn) return;
+
+    // escape text per RFC 5545 §3.3.11 before it goes into any ICS value
+    function icsEscape(str){
+      return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/;/g, '\\;')
+        .replace(/,/g, '\\,')
+        .replace(/\n/g, '\\n');
+    }
+
+    function pad(n){ return String(n).padStart(2, '0'); }
+
+    // DTSTAMP must be a UTC timestamp of "now" — computed at click time
+    function utcStamp(d){
+      return d.getUTCFullYear() + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate()) + 'T' +
+             pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + 'Z';
+    }
+
+    function buildICS(){
+      // ---- the approved wedding details, matching the Details section above ----
+      const eventTitle = "Kawya & Ushan's Wedding";
+      const venueLine = 'Araliya Beach Resort & Spa, Unawatuna';
+      const poruwaTime = '09:00 AM';
+      // Poruwa Ceremony start. No official end time has been provided for
+      // the wedding, so none is invented here — per RFC 5545, a VEVENT
+      // with a DTSTART and no DTEND/DURATION is valid (treated as a
+      // point-in-time event); we simply omit DTEND below rather than
+      // guess an end time.
+      const dtStartLocal = '20260924T090000';
+
+      const description = icsEscape(
+        eventTitle + '\n\n' +
+        'Poruwa Ceremony at ' + poruwaTime + '\n\n' +
+        'Venue:\n' + venueLine
+      );
+
+      const lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Kawya and Ushan Wedding//Save the Date//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VTIMEZONE',
+        'TZID:Asia/Colombo',
+        'BEGIN:STANDARD',
+        'DTSTART:19700101T000000',
+        'TZOFFSETFROM:+0530',
+        'TZOFFSETTO:+0530',
+        'TZNAME:+0530',
+        'END:STANDARD',
+        'END:VTIMEZONE',
+        'BEGIN:VEVENT',
+        'UID:kawya-ushan-wedding-24sep2026@savethedate',
+        'DTSTAMP:' + utcStamp(new Date()),
+        'DTSTART;TZID=Asia/Colombo:' + dtStartLocal,
+        'SUMMARY:' + icsEscape(eventTitle),
+        'DESCRIPTION:' + description,
+        'LOCATION:' + icsEscape(venueLine),
+        // reminder 1 — 7 days before
+        'BEGIN:VALARM',
+        'ACTION:DISPLAY',
+        'DESCRIPTION:' + icsEscape("7 Days Left! \uD83D\uDC8D Kawya & Ushan's wedding is almost here."),
+        'TRIGGER:-P7D',
+        'END:VALARM',
+        // reminder 2 — 2 days before
+        'BEGIN:VALARM',
+        'ACTION:DISPLAY',
+        'DESCRIPTION:' + icsEscape("2 Days Left! \u2764\uFE0F We can't wait to celebrate with you."),
+        'TRIGGER:-P2D',
+        'END:VALARM',
+        // reminder 3 — wedding morning 07:00 AM (2 hours before the 9:00 AM start)
+        'BEGIN:VALARM',
+        'ACTION:DISPLAY',
+        'DESCRIPTION:' + icsEscape("Today is the day! Kawya & Ushan's wedding is today. Please join us for the Poruwa Ceremony at 09:00 AM."),
+        'TRIGGER:-PT2H',
+        'END:VALARM',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ];
+
+      // ICS requires CRLF line endings
+      return lines.join('\r\n');
+    }
+
+    btn.addEventListener('click', function(){
+      const icsContent = buildICS();
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'Kawya-and-Ushan-Wedding.ics';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // release the blob URL shortly after handing off to the OS/browser
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    });
+  })();
+</script>
+</body>
+</html>
