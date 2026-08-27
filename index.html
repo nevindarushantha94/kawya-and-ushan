@@ -1767,16 +1767,12 @@
       resizeTimer = setTimeout(resizeCanvas, 150);
     });
 
-    // Visual size only — shrinks the drawn butterfly imagery to ~60% of
-    // its full-frame size, centered in the same fixed viewport-sized
-    // canvas. The full source video frame (sx/sy/sw/sh below) is always
-    // drawn — never cropped — so butterfly movement/position within that
-    // frame is completely untouched; only how large that whole frame is
-    // rendered changes. Fit is "contain" (fit the entire frame inside the
-    // viewport, no cropping), not "cover" — cover was cropping/zooming
-    // the frame whenever the video's aspect ratio didn't match the
-    // viewport's, which is what caused the mobile cropping.
-    const RENDER_SCALE = 0.6;
+    // The full source video frame (sx/sy/sw/sh below) is always drawn —
+    // never cropped — so butterfly movement/position within that frame is
+    // completely untouched. Fit is "contain": the entire frame is scaled
+    // to fit fully inside the viewport with no cropping and no zoom,
+    // on both mobile and desktop.
+    const RENDER_SCALE = 1;
 
     function drawFrame(){
       const vw = video.videoWidth, vh = video.videoHeight;
@@ -1788,7 +1784,7 @@
       // Always draw the full, uncropped source frame.
       const sx = 0, sy = 0, sw = vw, sh = vh;
       // "contain" fit — scale the whole frame to fit inside the viewport
-      // without cropping, then shrink further by RENDER_SCALE.
+      // without cropping or zooming.
       const containScale = Math.min(cw / vw, ch / vh);
       const finalScale = containScale * RENDER_SCALE;
       const dw = Math.round(vw * finalScale);
@@ -1828,6 +1824,7 @@
       if (started) return;
       started = true;
       resizeCanvas();
+      video.playbackRate = 0.7; // slower, more elegant flight — looping is native, so this rate persists automatically across every repeat
       const p = video.play();
       if (p && p.catch) p.catch(()=>{});
       scheduleNext();
