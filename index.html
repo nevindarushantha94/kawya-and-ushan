@@ -201,7 +201,7 @@
     width:100%; height:100%;
     z-index:0;
     pointer-events:none;
-    opacity:0.7;
+    opacity:0.45;
     display:block;
   }
   /* #main sits above the fixed background layer; established once here
@@ -1767,6 +1767,14 @@
       resizeTimer = setTimeout(resizeCanvas, 150);
     });
 
+    // Visual size only — shrinks the drawn butterfly imagery to ~60% of
+    // its previous size, centered in the same fixed viewport-sized
+    // canvas. The source crop (sx/sy/sw/sh below) — which is what
+    // determines the butterflies' on-screen flight position/movement — is
+    // completely untouched; only the destination rectangle they're drawn
+    // into is smaller.
+    const RENDER_SCALE = 0.6;
+
     function drawFrame(){
       const vw = video.videoWidth, vh = video.videoHeight;
       if (!vw || !vh || video.paused || video.ended){
@@ -1784,9 +1792,13 @@
       } else {
         sw = vw; sh = sw / canvasAspect; sx = 0; sy = (vh - sh) / 2;
       }
-      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, cw, ch);
+      const dw = Math.round(cw * RENDER_SCALE);
+      const dh = Math.round(ch * RENDER_SCALE);
+      const dx = Math.round((cw - dw) / 2);
+      const dy = Math.round((ch - dh) / 2);
+      ctx.drawImage(video, sx, sy, sw, sh, dx, dy, dw, dh);
 
-      const frame = ctx.getImageData(0, 0, cw, ch);
+      const frame = ctx.getImageData(dx, dy, dw, dh);
       const data = frame.data;
       // Pure chroma-key threshold with a soft (antialiased) edge band —
       // no hue shifting, so butterfly colours are never altered.
@@ -1799,7 +1811,7 @@
           data[i + 3] = Math.round(255 * (1 - (diff - 20) / 40));
         }
       }
-      ctx.putImageData(frame, 0, 0);
+      ctx.putImageData(frame, dx, dy);
       scheduleNext();
     }
 
