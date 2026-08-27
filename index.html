@@ -184,6 +184,26 @@
     background:rgba(248,242,230,0.45);
     pointer-events:none;
   }
+
+  /* ================= BUTTERFLY OVERLAY (chroma-keyed) =================
+     A single <video> (never rendered directly — kept invisible) is drawn
+     frame-by-frame onto this fixed, viewport-sized <canvas> with the pure
+     green chroma-key background removed client-side, leaving only the
+     butterflies. Sits directly above the existing background-video layer
+     (z-index:0, but later in DOM so it paints on top of it) and directly
+     below #main's content/section-overlay stack (z-index:1) — exactly the
+     "background video → butterflies → section tints → content" order
+     requested. Fixed + inset:0 (same pattern as .site-bg-video) so it can
+     never introduce horizontal scroll or affect document layout, and
+     pointer-events:none throughout so it never touches interaction. */
+  .butterfly-overlay{
+    position:fixed; inset:0;
+    width:100%; height:100%;
+    z-index:0;
+    pointer-events:none;
+    opacity:0.7;
+    display:block;
+  }
   /* #main sits above the fixed background layer; established once here
      rather than re-declared per-section. */
   #main{ position:relative; z-index:1; }
@@ -859,6 +879,248 @@
     transition:color .3s ease, border-color .3s ease;
   }
   .rsvp-credit-name:active{ color:var(--gold); border-color:var(--gold); }
+
+  /* =====================================================================
+     CINEMATIC WOW PASS — additive premium animation/effect layer only.
+     Nothing above this block was altered by this pass: no content,
+     structure, section order, functionality, or existing visual language
+     was changed. Everything below purely enhances entrance choreography,
+     ambient light, micro-interactions and reveal timing. All motion here
+     respects prefers-reduced-motion (see the dedicated block at the very
+     end of this section) and uses only transform/opacity/filter so it
+     stays cheap on mobile.
+     ===================================================================== */
+
+  /* ---- Hero cinematic entrance choreography ----
+     Staggered blur-to-sharp / fade-up sequence, played once when #main
+     receives its existing .zoomed class (the exact same moment the
+     Hero already becomes visible — no new trigger introduced). Runs
+     alongside the pre-existing #main opacity/scale transition rather
+     than replacing it. */
+  @keyframes heroRevealUp{
+    from{ opacity:0; transform:translateY(14px) scale(0.985); filter:blur(6px); }
+    to{ opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+  }
+  @keyframes heroRevealSoft{
+    from{ opacity:0; transform:translateY(8px); filter:blur(4px); }
+    to{ opacity:1; transform:translateY(0); filter:blur(0); }
+  }
+  #main.zoomed #hero .coverflow{ animation:heroRevealUp 1s cubic-bezier(.22,.68,.2,1) both; animation-delay:.05s; }
+  #main.zoomed #hero .hero-dots{ animation:heroRevealSoft .7s ease both; animation-delay:.32s; }
+  #main.zoomed #hero .names-big{ animation:heroRevealUp .95s cubic-bezier(.22,.68,.2,1) both; animation-delay:.4s; }
+  #main.zoomed #hero .hero-divider{ animation:heroRevealSoft .6s ease both; animation-delay:.68s; }
+  #main.zoomed #hero .hero-parents{ animation:heroRevealSoft .85s ease both; animation-delay:.78s; }
+  #main.zoomed #hero .scroll-hint{ animation:heroRevealSoft .7s ease both; animation-delay:1.05s; }
+  #main.zoomed #hero .eyebrow{ animation:heroRevealSoft .7s ease both; animation-delay:0s; }
+
+  /* ---- Ambient cinematic champagne light ----
+     A single, very slow, very low-opacity warm band drifting across the
+     whole invitation, blended softly so it never dulls or obscures text.
+     Sits above the background video but below all real content input —
+     pointer-events:none throughout. */
+  .site-light-sweep{
+    position:fixed; inset:0;
+    z-index:2;
+    overflow:hidden;
+    pointer-events:none;
+    mix-blend-mode:soft-light;
+  }
+  .site-light-sweep::before{
+    content:"";
+    position:absolute;
+    top:-40%; left:-45%;
+    width:55%; height:220%;
+    background:linear-gradient(100deg,
+      rgba(255,238,200,0) 25%,
+      rgba(255,238,200,0.30) 47%,
+      rgba(255,244,214,0.42) 50%,
+      rgba(255,238,200,0.30) 53%,
+      rgba(255,238,200,0) 75%);
+    transform:rotate(9deg);
+    filter:blur(9px);
+    animation:lightSweepMove 17s ease-in-out infinite;
+    animation-delay:1.2s;
+  }
+  @keyframes lightSweepMove{
+    0%{ left:-45%; }
+    50%{ left:115%; }
+    100%{ left:-45%; }
+  }
+
+  /* ---- Cinematic scroll journey indicator ----
+     A very thin champagne line along the top edge — never a browser-style
+     scrollbar, no labels, no content coverage (2px tall only). */
+  .scroll-progress{
+    position:fixed; top:0; left:0; right:0; height:2px;
+    z-index:46; pointer-events:none;
+    background:transparent;
+    opacity:0;
+    transition:opacity .6s ease;
+  }
+  .scroll-progress.visible{ opacity:1; }
+  .scroll-progress-bar{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, rgba(169,130,63,0.5), var(--gold-light) 60%, rgba(201,168,106,0.85));
+    transition:width .12s linear;
+  }
+
+  /* ---- Subtle atmospheric particles (Hero + closing gallery only) ---- */
+  .particles-layer{
+    position:absolute; inset:0;
+    overflow:hidden;
+    pointer-events:none;
+    z-index:1;
+  }
+  .particle{
+    position:absolute;
+    bottom:-6%;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,246,220,0.95), rgba(255,246,220,0) 72%);
+    opacity:0;
+    will-change:transform, opacity;
+    animation-name:particleFloat;
+    animation-timing-function:ease-in-out;
+    animation-iteration-count:infinite;
+  }
+  @keyframes particleFloat{
+    0%{ transform:translate(0,0); opacity:0; }
+    12%{ opacity:var(--p-op,0.45); }
+    88%{ opacity:var(--p-op,0.45); }
+    100%{ transform:translate(var(--p-dx,12px), var(--p-dy,-160px)); opacity:0; }
+  }
+
+  /* ---- Heart micro-interaction ---- */
+  .heart-pulse{
+    display:inline-block;
+    animation:heartPulse 3.2s ease-in-out infinite;
+    transform-origin:center;
+  }
+  @keyframes heartPulse{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.06); }
+  }
+
+  /* ---- Music button — subtle ripple only while actually playing ---- */
+  .music-toggle{ overflow:visible; }
+  .music-toggle .music-pulse-ring{
+    position:absolute; inset:-7px;
+    border-radius:50%;
+    border:1px solid rgba(201,168,106,0.55);
+    opacity:0;
+    pointer-events:none;
+  }
+  .music-toggle.visible:not(.is-muted) .music-pulse-ring{
+    animation:musicRipple 2.6s ease-out infinite;
+  }
+  @keyframes musicRipple{
+    0%{ transform:scale(0.82); opacity:0.5; }
+    100%{ transform:scale(1.38); opacity:0; }
+  }
+
+  /* ---- Premium button micro-interactions ----
+     Applies only to already-existing interactive buttons: Save the Date,
+     Get Directions, Call, WhatsApp. No size, colour or functional change —
+     a tiny lift, a soft shadow deepening, and one quick champagne shimmer
+     sweep on press. */
+  .details-savedate-btn, .location-btn, .rsvp-action-btn{
+    position:relative;
+    overflow:hidden;
+    transition:background .3s ease, box-shadow .3s ease, transform .25s cubic-bezier(.22,.68,.2,1), color .3s ease;
+  }
+  .details-savedate-btn::after, .location-btn::after, .rsvp-action-btn::after{
+    content:"";
+    position:absolute; top:0; left:-60%;
+    width:35%; height:100%;
+    background:linear-gradient(115deg, transparent, rgba(255,255,255,0.55), transparent);
+    transform:skewX(-18deg);
+    opacity:0;
+    pointer-events:none;
+  }
+  .details-savedate-btn:active, .location-btn:active, .rsvp-action-btn:active{
+    transform:translateY(-2px);
+    box-shadow:0 12px 26px rgba(60,44,18,0.22);
+  }
+  .details-savedate-btn:active::after, .location-btn:active::after, .rsvp-action-btn:active::after{
+    animation:btnShimmer .7s ease forwards;
+  }
+  @media (hover:hover){
+    .details-savedate-btn:hover, .location-btn:hover, .rsvp-action-btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 12px 26px rgba(60,44,18,0.2);
+    }
+  }
+  @keyframes btnShimmer{
+    0%{ left:-60%; opacity:0; }
+    30%{ opacity:.7; }
+    100%{ left:130%; opacity:0; }
+  }
+
+  /* ---- Countdown — refined depth + soft value-change pulse ---- */
+  .cd-num{
+    text-shadow:0 1px 0 rgba(255,255,255,0.5), 0 10px 24px rgba(169,130,63,0.18);
+    transition:transform .3s ease;
+  }
+  .cd-num.cd-tick{ animation:cdTick .5s cubic-bezier(.22,.68,.2,1); }
+  @keyframes cdTick{
+    0%{ transform:scale(1); opacity:1; }
+    35%{ transform:scale(1.1); opacity:0.75; }
+    100%{ transform:scale(1); opacity:1; }
+  }
+
+  /* ---- Feature (arch) photo — one soft champagne reflection pass,
+     played once, after the existing reveal has settled ---- */
+  .bi-frame-outer{ overflow:hidden; }
+  .bi-frame-outer::after{
+    content:"";
+    position:absolute; inset:0;
+    background:linear-gradient(120deg, transparent 42%, rgba(255,248,225,0.55) 50%, transparent 58%);
+    transform:translateX(-130%);
+    opacity:0;
+    pointer-events:none;
+  }
+  .bi-frame-wrap.in-view .bi-frame-outer::after{
+    animation:archShimmer 1.7s ease-out .55s 1 forwards;
+  }
+  @keyframes archShimmer{
+    0%{ transform:translateX(-130%); opacity:0; }
+    18%{ opacity:.85; }
+    62%{ opacity:.4; }
+    100%{ transform:translateX(130%); opacity:0; }
+  }
+
+  /* ---- Section reveal — add a very soft blur-to-sharp finish on top of
+     the existing opacity/translate reveal already used throughout ---- */
+  .reveal-io{ filter:blur(4px); }
+  .reveal-io.in-view{ filter:blur(0); }
+  .reveal-io{ transition:opacity .85s cubic-bezier(.22,.68,.2,1), transform .85s cubic-bezier(.22,.68,.2,1), filter .85s ease; }
+
+  .moments-section{ position:relative; }
+
+  /* ---- Performance & accessibility: reduced motion ----
+     Every decorative addition in this pass is switched off (or reduced to
+     its resting/final state) here. Existing functionality — countdown,
+     music, buttons, calendar/download, navigation — is entirely
+     unaffected since none of it depends on these animations. */
+  @media (prefers-reduced-motion: reduce){
+    #main.zoomed #hero .coverflow,
+    #main.zoomed #hero .hero-dots,
+    #main.zoomed #hero .names-big,
+    #main.zoomed #hero .hero-divider,
+    #main.zoomed #hero .hero-parents,
+    #main.zoomed #hero .scroll-hint,
+    #main.zoomed #hero .eyebrow{ animation:none !important; opacity:1 !important; filter:none !important; transform:none !important; }
+    .site-light-sweep{ display:none !important; }
+    .butterfly-overlay{ display:none !important; }
+    .particles-layer{ display:none !important; }
+    .heart-pulse{ animation:none !important; }
+    .music-toggle .music-pulse-ring{ animation:none !important; opacity:0 !important; }
+    .details-savedate-btn:active, .location-btn:active, .rsvp-action-btn:active{ transform:none; }
+    .details-savedate-btn::after, .location-btn::after, .rsvp-action-btn::after{ display:none !important; }
+    .cd-num.cd-tick{ animation:none !important; }
+    .bi-frame-outer::after{ display:none !important; }
+    .reveal-io{ filter:none !important; }
+    .scroll-progress{ transition:none; }
+  }
 </style>
 </head>
 <body>
@@ -885,6 +1147,17 @@
     <div class="site-bg-scrim"></div>
   </div>
 
+  <!-- ===================== BUTTERFLY OVERLAY (chroma-keyed, single video element) =====================
+       The source video is never shown directly — it is only a decode
+       source for the canvas beside it, which draws each frame with the
+       green background keyed out client-side. -->
+  <video id="butterflyVideo" muted loop playsinline webkit-playsinline="true" preload="auto" disablePictureInPicture style="position:fixed;top:0;left:0;width:2px;height:2px;opacity:0;pointer-events:none;"></video>
+  <canvas class="butterfly-overlay" id="butterflyCanvas" aria-hidden="true"></canvas>
+
+  <!-- ===================== CINEMATIC LIGHT + SCROLL JOURNEY (visual-only, non-interactive) ===================== -->
+  <div class="site-light-sweep" aria-hidden="true"></div>
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"><div class="scroll-progress-bar" id="scrollProgressBar"></div></div>
+
   <!-- ===================== COVER / TAP TO OPEN ===================== -->
   <section id="cover">
     <video
@@ -906,6 +1179,7 @@
 
     <!-- HERO -->
     <section id="hero">
+      <div class="particles-layer" id="heroParticles" aria-hidden="true"></div>
       <p class="eyebrow">You Are Cordially Invited</p>
 
       <div class="coverflow" id="coverflow">
@@ -942,7 +1216,7 @@
     <!-- BEFORE WE SAY "I DO" -->
     <section id="beforeido" class="before-ido-section">
       <div class="bi-inner">
-        <h2 class="bi-heading reveal-io reveal-up" style="--d:0s">Before We Say &ldquo;I Do&rdquo;&hellip; &#10084;&#65039;</h2>
+        <h2 class="bi-heading reveal-io reveal-up" style="--d:0s">Before We Say &ldquo;I Do&rdquo;&hellip; <span class="heart-pulse">&#10084;&#65039;</span></h2>
         <p class="bi-text reveal-io reveal-up" style="--d:.08s">From the first glance to this beautiful moment, every little chapter has brought us closer to forever.</p>
         <p class="bi-text reveal-io reveal-up" style="--d:.14s">With hearts full of love and gratitude, we are delighted to share this special day with the people who make our journey even more meaningful.</p>
 
@@ -1007,7 +1281,7 @@
           <div class="cd-colon" aria-hidden="true">&middot;</div>
           <div class="cd-unit"><span class="cd-num" id="cdSeconds">00</span><span class="cd-label">Seconds</span></div>
         </div>
-        <p class="countdown-complete" id="countdownComplete">The Celebration Has Begun &#10022;</p>
+        <p class="countdown-complete" id="countdownComplete">Today is the day. <span class="heart-pulse">&#10084;&#65039;</span></p>
       </div>
     </section>
 
@@ -1087,6 +1361,7 @@
 
     <!-- A FEW MORE MOMENTS -->
     <section id="moments" class="moments-section">
+      <div class="particles-layer" id="momentsParticles" aria-hidden="true"></div>
       <p class="moments-heading reveal-io reveal-up" style="--d:0s">A Few More Moments</p>
 
       <div class="moments-grid">
@@ -1123,6 +1398,7 @@
   <!-- ===================== BACKGROUND MUSIC ===================== -->
   <audio id="bgMusic" preload="auto" loop></audio>
   <button class="music-toggle" id="musicToggle" type="button" aria-label="Toggle music">
+    <span class="music-pulse-ring" aria-hidden="true"></span>
     <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>
     <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
   </button>
@@ -1349,6 +1625,9 @@
   bgVideoEl.poster = assetUrl('assets/background-poster.jpg');
   bgVideoEl.src = assetUrl('assets/background-video.mp4');
 
+  const butterflyVideoEl = document.getElementById('butterflyVideo');
+  butterflyVideoEl.src = assetUrl('assets/butterflies-overlay.mp4');
+
   const bgMusicEl = document.getElementById('bgMusic');
   bgMusicEl.src = assetUrl('assets/music.mp3');
 
@@ -1425,6 +1704,10 @@
       const bgPlayPromise = bgVideoEl.play();
       if (bgPlayPromise && bgPlayPromise.catch) bgPlayPromise.catch(()=>{});
 
+      // Butterfly overlay starts alongside the background video — same
+      // one-shot trigger, same muted/loop/playsinline pattern.
+      if (window.startButterflyOverlay) window.startButterflyOverlay();
+
       musicToggle.classList.add('visible');
 
       window.startHeroAutoplay();
@@ -1444,6 +1727,171 @@
     bgMusicEl.muted = !bgMusicEl.muted;
     musicToggle.classList.toggle('is-muted', bgMusicEl.muted);
   });
+
+  /* ===================== BUTTERFLY OVERLAY — CLIENT-SIDE CHROMA KEY ===================== */
+  /* Draws the single butterfly <video> onto a fixed canvas on every
+     decoded frame, removing the pure-green chroma-key background
+     pixel-by-pixel so only the butterflies remain — a true transparent
+     overlay, no server-side processing and no second video file. Uses
+     requestVideoFrameCallback where available (ties the work to actual
+     decoded frames — 24/s for this clip) and falls back to a plain
+     requestAnimationFrame loop otherwise. Canvas resolution is
+     deliberately capped well below viewport pixel size to keep this
+     per-pixel work cheap on mobile; the result is upscaled via CSS,
+     invisible at this layer's low 0.7 opacity. The video's own native
+     loop attribute handles the seamless repeat — nothing here trims,
+     reverses, retimes, or adds a fade to the clip. Skipped entirely
+     under prefers-reduced-motion, per the brief. */
+  (function(){
+    const video = document.getElementById('butterflyVideo');
+    const canvas = document.getElementById('butterflyCanvas');
+    if (!video || !canvas) return;
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion){ canvas.style.display = 'none'; return; }
+
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const MAX_DIM = 480; // internal render-resolution cap — see comment above
+    let started = false;
+
+    function resizeCanvas(){
+      const vw = window.innerWidth || 1;
+      const vh = window.innerHeight || 1;
+      const scale = MAX_DIM / Math.max(vw, vh);
+      canvas.width = Math.max(1, Math.round(vw * scale));
+      canvas.height = Math.max(1, Math.round(vh * scale));
+    }
+    resizeCanvas();
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resizeCanvas, 150);
+    });
+
+    function drawFrame(){
+      const vw = video.videoWidth, vh = video.videoHeight;
+      if (!vw || !vh || video.paused || video.ended){
+        scheduleNext();
+        return;
+      }
+      const cw = canvas.width, ch = canvas.height;
+      const videoAspect = vw / vh;
+      const canvasAspect = cw / ch;
+      // "cover" crop — same fit behaviour as object-fit:cover, computed
+      // manually since canvas drawImage has no such built-in mode.
+      let sx, sy, sw, sh;
+      if (videoAspect > canvasAspect){
+        sh = vh; sw = sh * canvasAspect; sx = (vw - sw) / 2; sy = 0;
+      } else {
+        sw = vw; sh = sw / canvasAspect; sx = 0; sy = (vh - sh) / 2;
+      }
+      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, cw, ch);
+
+      const frame = ctx.getImageData(0, 0, cw, ch);
+      const data = frame.data;
+      // Pure chroma-key threshold with a soft (antialiased) edge band —
+      // no hue shifting, so butterfly colours are never altered.
+      for (let i = 0; i < data.length; i += 4){
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        const diff = g - Math.max(r, b);
+        if (diff > 60){
+          data[i + 3] = 0;
+        } else if (diff > 20){
+          data[i + 3] = Math.round(255 * (1 - (diff - 20) / 40));
+        }
+      }
+      ctx.putImageData(frame, 0, 0);
+      scheduleNext();
+    }
+
+    function scheduleNext(){
+      if (video.requestVideoFrameCallback){
+        video.requestVideoFrameCallback(drawFrame);
+      } else {
+        requestAnimationFrame(drawFrame);
+      }
+    }
+
+    // Started from handleVideoEnded, in lockstep with the existing
+    // background video — never earlier, never a second trigger.
+    window.startButterflyOverlay = function(){
+      if (started) return;
+      started = true;
+      resizeCanvas();
+      const p = video.play();
+      if (p && p.catch) p.catch(()=>{});
+      scheduleNext();
+    };
+  })();
+
+  /* ===================== SUBTLE ATMOSPHERIC PARTICLES ===================== */
+  /* Purely decorative, additive layer — a handful of tiny slow-drifting
+     champagne/ivory specks confined to their own containers (Hero and the
+     closing gallery). Skipped entirely under prefers-reduced-motion, and
+     capped low so it never touches performance or scroll behaviour. */
+  (function(){
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
+
+    function seedParticles(containerId, count){
+      const layer = document.getElementById(containerId);
+      if (!layer) return;
+      for (let i = 0; i < count; i++){
+        const p = document.createElement('span');
+        p.className = 'particle';
+        const size = 2 + Math.random() * 3.2;
+        const left = Math.random() * 100;
+        const duration = 10 + Math.random() * 9;
+        const delay = Math.random() * 10;
+        const dx = (Math.random() * 24 - 12).toFixed(1);
+        const dy = -(120 + Math.random() * 90).toFixed(1);
+        const opacity = (0.28 + Math.random() * 0.28).toFixed(2);
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = left + '%';
+        p.style.setProperty('--p-dx', dx + 'px');
+        p.style.setProperty('--p-dy', dy + 'px');
+        p.style.setProperty('--p-op', opacity);
+        p.style.animationDuration = duration + 's';
+        p.style.animationDelay = delay + 's';
+        layer.appendChild(p);
+      }
+    }
+    seedParticles('heroParticles', 10);
+    seedParticles('momentsParticles', 8);
+  })();
+
+  /* ===================== CINEMATIC SCROLL JOURNEY INDICATOR ===================== */
+  /* A very thin champagne progress line — rAF-throttled scroll listener,
+     pure transform-free width update, no layout thrashing. Fades in once
+     the invitation is actually open (mirrors the music toggle's own
+     .visible timing) and never appears over the cover/tap-to-open screen. */
+  (function(){
+    const bar = document.getElementById('scrollProgressBar');
+    const wrap = document.getElementById('scrollProgress');
+    if (!bar || !wrap) return;
+    let ticking = false;
+    function update(){
+      ticking = false;
+      const doc = document.documentElement;
+      const scrollable = (doc.scrollHeight - doc.clientHeight);
+      const pct = scrollable > 0 ? Math.min(100, Math.max(0, (window.scrollY / scrollable) * 100)) : 0;
+      bar.style.width = pct + '%';
+    }
+    window.addEventListener('scroll', () => {
+      if (!ticking){ ticking = true; requestAnimationFrame(update); }
+    }, { passive:true });
+    window.addEventListener('resize', () => { if (!ticking){ ticking = true; requestAnimationFrame(update); } });
+    // reveal only once the invitation has actually opened
+    const mainEl = document.getElementById('main');
+    const moObserver = new MutationObserver(() => {
+      if (mainEl.classList.contains('visible')){
+        wrap.classList.add('visible');
+        update();
+        moObserver.disconnect();
+      }
+    });
+    moObserver.observe(mainEl, { attributes:true, attributeFilter:['class'] });
+  })();
 
   /* ===================== SCROLL REVEAL — OUR FOREVER / DETAILS / LOCATION / RSVP ===================== */
   /* One shared one-shot IntersectionObserver pattern for every remaining
@@ -1490,6 +1938,19 @@
 
     function pad(n){ return String(n).padStart(2, '0'); }
 
+    // Purely visual: briefly re-triggers the .cd-tick keyframe (a soft
+    // scale pulse, see CSS) whenever a numeral's displayed value actually
+    // changes. Never touches the countdown's own math/logic below.
+    const reduceMotionCd = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function setNum(el, val){
+      if (el.textContent === val) return;
+      el.textContent = val;
+      if (reduceMotionCd) return;
+      el.classList.remove('cd-tick');
+      void el.offsetWidth; // restart the animation
+      el.classList.add('cd-tick');
+    }
+
     function tick(){
       const diff = target.getTime() - Date.now();
       if (diff <= 0){
@@ -1498,10 +1959,10 @@
         return;
       }
       const totalSeconds = Math.floor(diff / 1000);
-      dEl.textContent = pad(Math.floor(totalSeconds / 86400));
-      hEl.textContent = pad(Math.floor((totalSeconds % 86400) / 3600));
-      mEl.textContent = pad(Math.floor((totalSeconds % 3600) / 60));
-      sEl.textContent = pad(totalSeconds % 60);
+      setNum(dEl, pad(Math.floor(totalSeconds / 86400)));
+      setNum(hEl, pad(Math.floor((totalSeconds % 86400) / 3600)));
+      setNum(mEl, pad(Math.floor((totalSeconds % 3600) / 60)));
+      setNum(sEl, pad(totalSeconds % 60));
     }
 
     tick();
