@@ -485,6 +485,19 @@
     .bi-frame-photo img{ animation:none !important; }
   }
 
+  /* ---- cinematic photo reveal — the arch photo specifically starts a
+     touch smaller (in addition to the shared translateY+blur-to-sharp
+     reveal already applied to every .reveal-io element) so it feels like
+     it is settling into the frame rather than simply fading up like the
+     surrounding text. One-shot, via the same .in-view trigger as
+     everything else — never a continuous/looping effect. Scoped to this
+     one element by ID so no other .reveal-up element is affected. */
+  #biFrame.reveal-io{ transform:translateY(18px) scale(0.94); }
+  #biFrame.reveal-io.in-view{ transform:none; }
+  @media (prefers-reduced-motion: reduce){
+    #biFrame.reveal-io{ transform:none !important; }
+  }
+
 
   /* ================= A FEW MORE MOMENTS — closing editorial gallery =================
      Deliberately different from the Hero Coverflow: a curated, varied-size
@@ -536,6 +549,21 @@
   }
   @media (prefers-reduced-motion: reduce){
     .moment-fig img{ animation:none !important; }
+  }
+
+  /* ---- small, understated closing message — the emotional end note
+     after the final photo settles. Not a new section: lives inside the
+     existing Moments section, after the grid. ---- */
+  .moments-closing{ margin-top:36px; }
+  .moments-closing-line{
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    color:var(--ink-soft); font-size:1rem; line-height:1.5;
+    margin:0 0 8px;
+  }
+  .moments-closing-sign{
+    font-family:'Playfair Display',serif; font-weight:600;
+    color:var(--gold-deep); font-size:0.92rem; letter-spacing:0.03em;
+    margin:0;
   }
 
   /* ---- reveal-scale modifier — used by moment-04 (fade + subtle scale) ---- */
@@ -864,6 +892,32 @@
     .rsvp-action-btn{ padding:8px 10px; letter-spacing:0.08em; }
   }
 
+  /* ---- final designer credit — one small, understated signature link,
+     always at the very bottom. Whole line is clickable (wraps the
+     existing WhatsApp link) rather than only the name, per the brief. ---- */
+  .final-credit-wrap{ padding:34px 26px 56px; text-align:center; }
+  .final-credit-link{
+    display:inline-flex; align-items:baseline; justify-content:center;
+    flex-wrap:wrap; gap:0 6px;
+    font-family:'Montserrat',sans-serif;
+    text-decoration:none;
+    opacity:0.75;
+    transition:opacity .3s ease;
+  }
+  .final-credit-link:active{ opacity:0.95; }
+  .final-credit-label{
+    font-size:0.66rem; letter-spacing:0.08em;
+    color:var(--ink-soft);
+  }
+  .final-credit-name{
+    font-size:0.72rem; letter-spacing:0.1em; font-weight:600;
+    color:var(--gold-deep);
+    border-bottom:1px solid var(--line);
+    padding-bottom:1px;
+    transition:color .3s ease, border-color .3s ease;
+  }
+  .final-credit-link:active .final-credit-name{ color:var(--gold); border-color:var(--gold); }
+
   /* ---- small subtle designer credit, always at the very bottom ---- */
   .rsvp-credit{
     font-family:'Montserrat',sans-serif;
@@ -1058,13 +1112,13 @@
   /* ---- Countdown — refined depth + soft value-change pulse ---- */
   .cd-num{
     text-shadow:0 1px 0 rgba(255,255,255,0.5), 0 10px 24px rgba(169,130,63,0.18);
-    transition:transform .3s ease;
+    transition:transform .3s ease, filter .3s ease;
   }
   .cd-num.cd-tick{ animation:cdTick .5s cubic-bezier(.22,.68,.2,1); }
   @keyframes cdTick{
-    0%{ transform:scale(1); opacity:1; }
-    35%{ transform:scale(1.1); opacity:0.75; }
-    100%{ transform:scale(1); opacity:1; }
+    0%{ transform:scale(1); filter:blur(0); opacity:1; }
+    38%{ transform:scale(1.045); filter:blur(2px); opacity:.8; }
+    100%{ transform:scale(1); filter:blur(0); opacity:1; }
   }
 
   /* ---- Feature (arch) photo — one soft champagne reflection pass,
@@ -1223,7 +1277,7 @@
         <p class="bi-family-heading reveal-io reveal-up" style="--d:.2s">Together With Our Families</p>
         <p class="bi-invite-line reveal-io reveal-up" style="--d:.26s">We invite you to celebrate with us as two hearts begin a lifetime together.</p>
 
-        <div class="bi-frame-wrap reveal-io reveal-up" id="biFrame" style="--d:.34s">
+        <div class="bi-frame-wrap reveal-io reveal-up" id="biFrame" style="--d:.5s">
           <div class="bi-arch-glow" aria-hidden="true"></div>
           <div class="bi-frame-outer">
             <div class="bi-frame-photo">
@@ -1378,13 +1432,19 @@
           <img src="assets/photos/moments/moment-04.jpg" alt="Kawya &amp; Ushan" loading="lazy">
         </figure>
       </div>
+
+      <div class="moments-closing reveal-io reveal-up" style="--d:.42s">
+        <p class="moments-closing-line">Until We Meet on Our Special Day</p>
+        <p class="moments-closing-sign">With love, Kawya &amp; Ushan</p>
+      </div>
     </section>
 
     <!-- FINAL DESIGNER BRANDING -->
     <div class="final-credit-wrap">
-      <p class="rsvp-credit reveal-io reveal-up" style="--d:0s">
-        <span class="rsvp-credit-label">Design by</span><a class="rsvp-credit-name" href="https://wa.me/94766527700" target="_blank" rel="noopener">Nevinda Rushantha</a>
-      </p>
+      <a class="final-credit-link reveal-io reveal-up" style="--d:0s" href="https://wa.me/94766527700" target="_blank" rel="noopener" aria-label="Designed with love by Nevinda Rushantha — contact on WhatsApp">
+        <span class="final-credit-label">Designed with &#10084;&#65039; by</span>
+        <span class="final-credit-name">Nevinda Rushantha</span>
+      </a>
     </div>
 
   </div>
