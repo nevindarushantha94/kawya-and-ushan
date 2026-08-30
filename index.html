@@ -2520,15 +2520,14 @@
       const lines = [];
       lines.push(`Hello ${recipientName}! 💛`);
       lines.push('');
-      lines.push(`This is ${guestName}, RSVP-ing for your wedding.`);
       if (attendance === 'yes'){
-        lines.push("I'm so excited to celebrate your special day with you! 🎉");
+        lines.push(`I'm ${guestName}. I'm so excited to celebrate your special day with you! 🎉`);
       } else if (attendance === 'no'){
-        lines.push("I'm so sorry I won't be able to make it, but I'll be thinking of you both! 💛");
+        lines.push(`I'm ${guestName}. Thank you so much for inviting me. Unfortunately, I won't be able to join you, but I'm wishing you both a beautiful wedding! ❤️`);
       }
       if (message){
         lines.push('');
-        lines.push(`"${message}"`);
+        lines.push(message);
       }
       lines.push('');
       lines.push(`With love,`);
