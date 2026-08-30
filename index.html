@@ -73,7 +73,7 @@
   }
   .page{ max-width:var(--max-w); margin:0 auto; position:relative; min-height:100vh; }
 
-  /* ================= OPENING VIDEO / TAP TO OPEN ================= */
+  /* ================= OPENING VIDEO / POSTER / TAP TO OPEN ================= */
   #cover{
     position:fixed; top:0; left:0; right:0;
     height:100vh; height:100svh; height:100dvh;
@@ -86,33 +86,77 @@
     position:absolute; inset:0; width:100%; height:100%;
     object-fit:cover; display:block; background:#000;
   }
-  .tap-cue{
-    position:absolute; left:50%; bottom:9%;
-    transform:translateX(-50%); z-index:2;
-    opacity:0; animation:tapCueIn 0.9s ease-out forwards; animation-delay:0.4s;
-    transition:opacity 0.4s ease, transform 0.4s ease;
+
+  /* ---- Poster overlay: the full reference-style poster, visible the
+     instant the invitation loads, sitting on top of the opening video's
+     poster frame. Each block fades OUT (never in) once tapped — see the
+     .poster-fade-out rules below — while the existing video begins
+     playing underneath exactly as before. ---- */
+  .poster-overlay{
+    position:absolute; inset:0; z-index:2;
+    display:flex; flex-direction:column; align-items:center;
+    justify-content:space-between;
+    padding:6.5% 6% 6%;
+    text-align:center;
+    opacity:0; animation:posterIn 1s ease-out forwards; animation-delay:0.15s;
   }
-  .tap-cue.tap-cue-hidden{
-    opacity:0 !important; transform:translateX(-50%) translateY(6px); pointer-events:none;
+  @keyframes posterIn{ from{ opacity:0; } to{ opacity:1; } }
+
+  .poster-top{ width:100%; max-width:520px; }
+  .poster-top-ornament{
+    display:flex; align-items:center; justify-content:center;
+    gap:14px; margin-bottom:14px; color:var(--gold-light);
   }
-  @keyframes tapCueIn{
-    from{ opacity:0; transform:translateX(-50%) translateY(10px); }
-    to{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .poster-top-ornament svg{ display:block; }
+  .poster-top-ornament .ornament-line{ flex:1; max-width:110px; height:1px; background:linear-gradient(90deg, transparent, currentColor); }
+  .poster-top-ornament .ornament-line.right{ background:linear-gradient(90deg, currentColor, transparent); }
+  .poster-names{
+    font-family:'Playfair Display',serif; font-weight:600;
+    color:#F3E4BD;
+    font-size:clamp(1.9rem, 8.4vw, 2.7rem);
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    text-shadow:0 2px 16px rgba(0,0,0,0.4);
+    margin-bottom:10px;
   }
+  .poster-date{
+    font-family:'Montserrat',sans-serif; font-weight:500;
+    color:#E7D6AE;
+    font-size:clamp(0.85rem, 3.4vw, 1.05rem);
+    letter-spacing:0.36em;
+    text-shadow:0 2px 10px rgba(0,0,0,0.35);
+    margin-bottom:8px;
+  }
+  .poster-tagline{
+    font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:500;
+    color:#EFE3C4;
+    font-size:clamp(1rem, 3.8vw, 1.2rem);
+    text-shadow:0 2px 10px rgba(0,0,0,0.35);
+  }
+
+  .poster-tap-block{
+    width:100%; max-width:420px;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .poster-tap-ornament-top{ color:var(--gold-light); margin-bottom:10px; opacity:0.95; }
+  .poster-tap-ornament-bottom{ color:var(--gold-light); margin-top:14px; opacity:0.95; }
+  .poster-tap-ornament-top svg, .poster-tap-ornament-bottom svg{ display:block; }
+
   .tap-to-open-btn{
     position:relative;
     display:inline-flex; align-items:center; justify-content:center;
-    gap:0.55em;
-    border:1px solid rgba(201,168,106,0.75);
-    background:rgba(248,242,230,0.14);
+    gap:0.7em;
+    width:100%;
+    border:1px solid rgba(201,168,106,0.8);
+    background:rgba(248,242,230,0.12);
     backdrop-filter:blur(2px);
     color:var(--cream-bg);
     font-family:'Montserrat',sans-serif;
-    letter-spacing:clamp(0.16em, 3.2vw, 0.32em);
-    font-size:clamp(0.66rem, 3vw, 0.74rem);
+    letter-spacing:clamp(0.16em, 3.2vw, 0.34em);
+    font-size:clamp(0.7rem, 3vw, 0.82rem);
     white-space:nowrap;
     text-transform:uppercase;
-    padding:15px clamp(20px, 6vw, 34px); border-radius:3px; cursor:pointer;
+    padding:17px clamp(20px, 6vw, 30px); border-radius:34px; cursor:pointer;
     box-shadow:0 6px 26px rgba(0,0,0,0.22);
     overflow:hidden;
     isolation:isolate;
@@ -128,16 +172,40 @@
     background-position:150% 0;
     animation:tapShimmer 5.2s ease-in-out infinite;
   }
-  .tap-to-open-btn .tap-icon{
-    width:13px; height:13px; flex:none; display:block;
-    opacity:0.92;
-  }
   @keyframes tapBreathe{ 0%,100%{ opacity:0.92; } 50%{ opacity:1; } }
   @keyframes tapShimmer{
     0%, 82%{ background-position:150% 0; }
     92%{ background-position:-40% 0; }
     100%{ background-position:-40% 0; }
   }
+
+  /* ---- staggered fade-OUT after tap: button+top ornament first, then
+     bottom ornament, then tagline, then date, then names — each simply
+     fades to opacity 0, nothing fades in again. ---- */
+  .poster-overlay.poster-fade-out .poster-tap-ornament-top,
+  .poster-overlay.poster-fade-out .tap-to-open-btn{
+    /* animation:none is required here — the button's infinite tapBreathe
+       keyframe animation also drives opacity, and a running CSS animation
+       always wins over a plain transition on the same property, so without
+       this the fade-out below would never actually be visible */
+    animation:none;
+    opacity:0; transition:opacity 0.5s ease 0s; pointer-events:none;
+  }
+  .poster-overlay.poster-fade-out .tap-to-open-btn::before{ animation:none; }
+  .poster-overlay.poster-fade-out .poster-tap-ornament-bottom{
+    opacity:0; transition:opacity 0.5s ease 0.18s;
+  }
+  .poster-overlay.poster-fade-out .poster-tagline{
+    opacity:0; transition:opacity 0.5s ease 0.36s;
+  }
+  .poster-overlay.poster-fade-out .poster-date{
+    opacity:0; transition:opacity 0.5s ease 0.54s;
+  }
+  .poster-overlay.poster-fade-out .poster-names,
+  .poster-overlay.poster-fade-out .poster-top-ornament{
+    opacity:0; transition:opacity 0.5s ease 0.72s;
+  }
+
   .cover-flash{
     position:absolute; inset:0; z-index:3;
     background:radial-gradient(circle at 50% 42%, #FFFDF6, var(--cream-bg) 72%);
@@ -148,67 +216,18 @@
     0%{ opacity:0; } 32%{ opacity:0.97; } 58%{ opacity:0.97; } 100%{ opacity:0; }
   }
   @media (prefers-reduced-motion: reduce){
+    .poster-overlay{ animation:none; opacity:1; }
     .tap-to-open-btn{ animation:none; }
     .tap-to-open-btn::before{ animation:none; opacity:0; }
-    .tap-cue{ animation:none; opacity:1; }
-  }
-
-  /* ================= CINEMATIC TITLE REVEAL (during opening video) ================= */
-  /* Sits inside #cover, above the video, below the tap cue (which is
-     already hidden by the time this appears). Positioned in the upper
-     safe zone of the envelope clip so it never sits over the wax seal /
-     K&U monogram, which stays centered lower in the frame throughout the
-     final part of the video (checked against the actual footage). */
-  .envelope-title-reveal{
-    position:absolute;
-    top:8%;
-    left:50%;
-    transform:translateX(-50%);
-    z-index:2;
-    width:100%;
-    max-width:520px;
-    padding:0 24px;
-    text-align:center;
-    pointer-events:none;
-  }
-  .envelope-title-reveal .etr-line{
-    opacity:0;
-    filter:blur(6px);
-    transform:translateY(14px);
-    transition:opacity 1.15s ease, filter 1.15s ease, transform 1.15s ease;
-    will-change:opacity, filter, transform;
-  }
-  .envelope-title-reveal.etr-on .etr-line{ opacity:1; filter:blur(0); transform:translateY(0); }
-  .envelope-title-reveal.etr-on .etr-names{ transition-delay:0s; }
-  .envelope-title-reveal.etr-on .etr-date{ transition-delay:0.95s; }
-  .envelope-title-reveal.etr-on .etr-tagline{ transition-delay:1.9s; }
-  .etr-names{
-    font-family:'Playfair Display',serif; font-weight:600;
-    color:#FBF4E2;
-    font-size:clamp(1.5rem, 6.5vw, 2.15rem);
-    letter-spacing:0.12em;
-    text-transform:uppercase;
-    text-shadow:0 2px 14px rgba(0,0,0,0.45);
-    margin-bottom:10px;
-  }
-  .etr-date{
-    font-family:'Montserrat',sans-serif; font-weight:500;
-    color:#E7D6AE;
-    font-size:clamp(0.85rem, 3.2vw, 1rem);
-    letter-spacing:0.34em;
-    text-shadow:0 2px 10px rgba(0,0,0,0.4);
-    margin-bottom:8px;
-  }
-  .etr-tagline{
-    font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:500;
-    color:#EFE3C4;
-    font-size:clamp(0.98rem, 3.6vw, 1.2rem);
-    letter-spacing:0.02em;
-    text-shadow:0 2px 10px rgba(0,0,0,0.4);
-  }
-  @media (prefers-reduced-motion: reduce){
-    .envelope-title-reveal .etr-line{ transition:opacity 0.4s ease; filter:none !important; transform:none !important; }
-    .envelope-title-reveal.etr-on .etr-line{ transition-delay:0s !important; }
+    .poster-overlay.poster-fade-out .poster-tap-ornament-top,
+    .poster-overlay.poster-fade-out .tap-to-open-btn,
+    .poster-overlay.poster-fade-out .poster-tap-ornament-bottom,
+    .poster-overlay.poster-fade-out .poster-tagline,
+    .poster-overlay.poster-fade-out .poster-date,
+    .poster-overlay.poster-fade-out .poster-names,
+    .poster-overlay.poster-fade-out .poster-top-ornament{
+      transition-delay:0s !important;
+    }
   }
 
   /* ================= MAIN ================= */
@@ -1309,19 +1328,41 @@
       webkit-playsinline="true"
       disablePictureInPicture
     ></video>
-    <div class="tap-cue" id="tapCue">
-      <button class="tap-to-open-btn" id="tapToOpenBtn" type="button" aria-label="Tap to open the wedding invitation">
-        <svg class="tap-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect x="2.5" y="5.5" width="19" height="13" rx="1.2" stroke="currentColor" stroke-width="1.1"/>
-          <path d="M3.5 6.5L12 13L20.5 6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>Tap to Open</span>
-      </button>
-    </div>
-    <div class="envelope-title-reveal" id="envelopeTitleReveal" aria-hidden="true">
-      <div class="etr-line etr-names">Kawya &amp; Ushan</div>
-      <div class="etr-line etr-date">24 • 09 • 2026</div>
-      <div class="etr-line etr-tagline">The beginning of forever</div>
+    <div class="poster-overlay" id="posterOverlay">
+      <div class="poster-top">
+        <div class="poster-top-ornament" aria-hidden="true">
+          <span class="ornament-line"></span>
+          <svg width="20" height="14" viewBox="0 0 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 12C10 12 2 8.2 2 4.6C2 2.3 4.6 1.1 6.6 2.6C8 3.6 10 6 10 6C10 6 12 3.6 13.4 2.6C15.4 1.1 18 2.3 18 4.6C18 8.2 10 12 10 12Z" stroke="currentColor" stroke-width="0.9" fill="none"/>
+          </svg>
+          <span class="ornament-line right"></span>
+        </div>
+        <div class="poster-names">Kawya &amp; Ushan</div>
+        <div class="poster-date">24 • 09 • 2026</div>
+        <div class="poster-tagline">The beginning of forever</div>
+      </div>
+
+      <div class="poster-tap-block">
+        <div class="poster-tap-ornament-top" aria-hidden="true">
+          <svg width="120" height="16" viewBox="0 0 120 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 8C20 8 26 3 40 8C46 10 52 6 56 8" stroke="currentColor" stroke-width="0.8" stroke-linecap="round"/>
+            <path d="M118 8C100 8 94 3 80 8C74 10 68 6 64 8" stroke="currentColor" stroke-width="0.8" stroke-linecap="round"/>
+            <path d="M60 12C60 12 55 9 55 6.3C55 4.7 57 3.9 58.2 5C58.9 5.6 60 7 60 7C60 7 61.1 5.6 61.8 5C63 3.9 65 4.7 65 6.3C65 9 60 12 60 12Z" stroke="currentColor" stroke-width="0.8"/>
+          </svg>
+        </div>
+        <button class="tap-to-open-btn" id="tapToOpenBtn" type="button" aria-label="Tap to open the wedding invitation">
+          <span>Tap to Open</span>
+        </button>
+        <div class="poster-tap-ornament-bottom" aria-hidden="true">
+          <svg width="150" height="20" viewBox="0 0 150 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 10C24 4 34 16 54 10C64 7 66 12 75 12" stroke="currentColor" stroke-width="0.8" stroke-linecap="round"/>
+            <path d="M146 10C126 4 116 16 96 10C86 7 84 12 75 12" stroke="currentColor" stroke-width="0.8" stroke-linecap="round"/>
+            <path d="M75 16C75 16 70.5 13 70.5 10.3C70.5 8.7 72.5 7.9 73.7 9C74.4 9.6 75 10.5 75 10.5C75 10.5 75.6 9.6 76.3 9C77.5 7.9 79.5 8.7 79.5 10.3C79.5 13 75 16 75 16Z" stroke="currentColor" stroke-width="0.8"/>
+            <circle cx="16" cy="4" r="0.9" fill="currentColor"/>
+            <circle cx="134" cy="4" r="0.9" fill="currentColor"/>
+          </svg>
+        </div>
+      </div>
     </div>
     <div class="cover-flash" id="coverFlash"></div>
   </section>
@@ -1792,27 +1833,11 @@
   const cover = document.getElementById('cover');
   const main = document.getElementById('main');
   const openingVideo = openingVideoEl;
-  const tapCue = document.getElementById('tapCue');
+  const posterOverlay = document.getElementById('posterOverlay');
   const tapToOpenBtn = document.getElementById('tapToOpenBtn');
   const coverFlash = document.getElementById('coverFlash');
-  const envelopeTitleReveal = document.getElementById('envelopeTitleReveal');
   let hasOpened = false;
   let hasEndedHandled = false;
-  let hasTitleRevealed = false;
-
-  // Triggers the cinematic title reveal once the video has played through
-  // ~62% of its ACTUAL duration (i.e. targeting the final ~38%), rather
-  // than any hard-coded time — so this keeps working correctly even if
-  // the opening video file is ever swapped for one of a different length.
-  function checkTitleRevealProgress(){
-    if (hasTitleRevealed) return;
-    if (!openingVideo.duration) return;
-    if (openingVideo.currentTime / openingVideo.duration >= 0.62){
-      hasTitleRevealed = true;
-      envelopeTitleReveal.classList.add('etr-on');
-      openingVideo.removeEventListener('timeupdate', checkTitleRevealProgress);
-    }
-  }
 
   document.body.style.overflow = 'hidden';
 
@@ -1835,7 +1860,10 @@
     if (hasOpened) return;
     hasOpened = true;
 
-    tapCue.classList.add('tap-cue-hidden');
+    // Poster elements fade out one-by-one (button first, names last) via
+    // the staggered CSS transition-delays on .poster-fade-out — they never
+    // fade back in, and the video plays on underneath throughout.
+    posterOverlay.classList.add('poster-fade-out');
 
     // the tap is the single user gesture that unlocks both the intro
     // video AND the music — nothing else prompts for audio afterwards
@@ -1854,7 +1882,6 @@
         handleVideoEnded();
       }
     });
-    openingVideo.addEventListener('timeupdate', checkTitleRevealProgress);
   }
 
   function handleVideoEnded(){
