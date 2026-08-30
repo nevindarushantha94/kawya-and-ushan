@@ -955,6 +955,129 @@
     margin:0 0 58px;
   }
 
+  /* ================= RSVP FORM (premium editorial form UI) =================
+     Sits between the RSVP intro divider and the existing "Kawya & Ushan /
+     We can't wait..." contact block (both untouched below). Built entirely
+     from the invitation's own cream/champagne language — thin borders,
+     generous whitespace, no boxed corporate-form look. Layout/hierarchy is
+     inspired by the reference image (label -> control -> spacing rhythm)
+     but every colour, border and type choice comes from this file's own
+     --gold / --cream / --line variables, and no background art from the
+     reference is used anywhere. */
+  .rsvp-form{
+    max-width:400px; margin:0 auto 56px; text-align:left;
+  }
+  .rsvp-field{ margin-bottom:30px; }
+  .rsvp-field-label{
+    display:flex; align-items:center; gap:8px;
+    font-family:'Montserrat',sans-serif;
+    font-size:0.66rem; letter-spacing:0.2em; text-transform:uppercase;
+    color:var(--gold-deep);
+    margin-bottom:11px;
+  }
+  .rsvp-field-label svg{ width:13px; height:13px; flex-shrink:0; opacity:0.9; }
+
+  .rsvp-input, .rsvp-textarea{
+    display:block; width:100%;
+    font-family:'Cormorant Garamond',serif; font-size:1.05rem; color:var(--ink);
+    background:rgba(255,252,245,0.55);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 16px;
+    transition:border-color .3s ease, background .3s ease;
+  }
+  .rsvp-input::placeholder, .rsvp-textarea::placeholder{
+    color:var(--ink-soft); opacity:0.55; font-style:italic;
+  }
+  .rsvp-input:focus, .rsvp-textarea:focus{
+    outline:none; border-color:var(--gold); background:rgba(255,252,245,0.85);
+  }
+  .rsvp-input.rsvp-invalid{ border-color:#B5654A; }
+  .rsvp-textarea{ min-height:92px; resize:vertical; line-height:1.5; }
+
+  .rsvp-attendance{ display:flex; gap:12px; }
+  .rsvp-choice{
+    flex:1; display:flex; align-items:center; gap:10px;
+    font-family:'Montserrat',sans-serif;
+    background:rgba(255,252,245,0.5);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:13px 14px; cursor:pointer;
+    color:var(--ink-soft);
+    transition:border-color .3s ease, background .3s ease;
+  }
+  .rsvp-choice-radio{
+    width:15px; height:15px; flex-shrink:0; border-radius:50%;
+    border:1.4px solid var(--gold-light);
+    position:relative;
+  }
+  .rsvp-choice-radio::after{
+    content:""; position:absolute; inset:3px; border-radius:50%;
+    background:var(--gold); transform:scale(0); transition:transform .25s ease;
+  }
+  .rsvp-choice-text{ font-size:0.78rem; letter-spacing:0.02em; line-height:1.3; }
+  .rsvp-choice.is-selected{
+    border-color:var(--gold); background:rgba(201,168,106,0.14);
+    color:var(--ink);
+  }
+  .rsvp-choice.is-selected .rsvp-choice-radio::after{ transform:scale(1); }
+
+  .rsvp-recipient{ display:flex; gap:12px; }
+  .rsvp-recipient-btn{
+    flex:1;
+    font-family:'Montserrat',sans-serif;
+    font-size:0.74rem; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--ink-soft);
+    background:rgba(255,252,245,0.5);
+    border:1px solid var(--line);
+    border-radius:30px;
+    padding:12px 10px; cursor:pointer; text-align:center;
+    transition:border-color .3s ease, background .3s ease, color .3s ease;
+  }
+  .rsvp-recipient-btn.is-selected{
+    border-color:var(--gold); background:rgba(201,168,106,0.16);
+    color:var(--gold-deep); font-weight:600;
+  }
+
+  .rsvp-send-btn{
+    position:relative;
+    display:flex; align-items:center; justify-content:center; gap:9px;
+    width:100%;
+    font-family:'Montserrat',sans-serif;
+    font-size:0.78rem; letter-spacing:0.28em; text-transform:uppercase;
+    color:var(--gold-deep);
+    background:rgba(255,252,245,0.65);
+    border:1px solid var(--gold-light);
+    border-radius:30px;
+    padding:16px 20px; cursor:pointer;
+    box-shadow:0 6px 18px rgba(138,106,48,0.16);
+    overflow:hidden; isolation:isolate;
+    transition:transform .25s ease, box-shadow .25s ease, background .25s ease;
+  }
+  .rsvp-send-btn svg{ width:15px; height:15px; flex-shrink:0; }
+  .rsvp-send-btn:active{
+    transform:translateY(1px);
+    box-shadow:0 3px 10px rgba(138,106,48,0.18);
+    background:rgba(255,252,245,0.9);
+  }
+  .rsvp-send-btn::before{
+    content:""; position:absolute; inset:0; z-index:-1;
+    background:linear-gradient(115deg, transparent 40%, rgba(255,250,235,0.55) 50%, transparent 60%);
+    background-size:220% 100%; background-position:150% 0;
+  }
+  .rsvp-send-btn.rsvp-shimmer::before{ animation:rsvpShimmerOnce .7s ease-out; }
+  @keyframes rsvpShimmerOnce{
+    from{ background-position:150% 0; } to{ background-position:-40% 0; }
+  }
+
+  @media (max-width:360px){
+    .rsvp-attendance, .rsvp-recipient{ gap:8px; }
+    .rsvp-choice{ padding:12px 10px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .rsvp-send-btn.rsvp-shimmer::before{ animation:none; }
+  }
+
   /* ---- couple contact — two quiet columns, no boxes, separated by the
      same thin baseline used by the Countdown's --details-item-sep ---- */
   .rsvp-contact{
@@ -1516,10 +1639,61 @@
         <span class="rsvp-divider-line"></span>
       </div>
 
-      <p class="rsvp-names reveal-io reveal-up" style="--d:.3s">Kawya &amp; Ushan</p>
-      <p class="rsvp-subtext reveal-io reveal-up" style="--d:.36s">We can&rsquo;t wait to celebrate with you.</p>
+      <form class="rsvp-form" id="rsvpForm" novalidate>
+        <div class="rsvp-field reveal-io reveal-up" style="--d:.3s">
+          <label class="rsvp-field-label" for="rsvpGuestName">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Your Name
+          </label>
+          <input class="rsvp-input" type="text" id="rsvpGuestName" name="guestName" placeholder="Your name" autocomplete="name">
+        </div>
 
-      <div class="rsvp-contact reveal-io reveal-up" style="--d:.42s">
+        <div class="rsvp-field reveal-io reveal-up" style="--d:.36s">
+          <span class="rsvp-field-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+            Will You Be Joining Us?
+          </span>
+          <div class="rsvp-attendance" id="rsvpAttendance" role="radiogroup" aria-label="Will you be joining us?">
+            <button type="button" class="rsvp-choice" data-attendance="yes" role="radio" aria-checked="false">
+              <span class="rsvp-choice-radio" aria-hidden="true"></span>
+              <span class="rsvp-choice-text">Yes, I&rsquo;ll be there</span>
+            </button>
+            <button type="button" class="rsvp-choice" data-attendance="no" role="radio" aria-checked="false">
+              <span class="rsvp-choice-radio" aria-hidden="true"></span>
+              <span class="rsvp-choice-text">Sorry, I can&rsquo;t</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="rsvp-field reveal-io reveal-up" style="--d:.42s">
+          <label class="rsvp-field-label" for="rsvpMessage">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            A Little Message
+          </label>
+          <textarea class="rsvp-textarea" id="rsvpMessage" name="message" rows="3" placeholder="Leave a little message for the couple..."></textarea>
+        </div>
+
+        <div class="rsvp-field reveal-io reveal-up" style="--d:.48s">
+          <span class="rsvp-field-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" opacity="0"/><path d="M4 4l8 8 8-8"/><path d="M4 4v16h16V4"/></svg>
+            Send Your RSVP To
+          </span>
+          <div class="rsvp-recipient" id="rsvpRecipient" role="radiogroup" aria-label="Send your RSVP to">
+            <button type="button" class="rsvp-recipient-btn is-selected" data-recipient="kawya" role="radio" aria-checked="true">Kawya</button>
+            <button type="button" class="rsvp-recipient-btn" data-recipient="ushan" role="radio" aria-checked="false">Ushan</button>
+          </div>
+        </div>
+
+        <button type="submit" class="rsvp-send-btn reveal-io reveal-up" id="rsvpSendBtn" style="--d:.54s">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0 0 12.05 4a7.94 7.94 0 0 0-6.9 11.9L4 20l4.2-1.1a7.9 7.9 0 0 0 3.85 1h.01a7.94 7.94 0 0 0 5.54-13.58zm-5.55 12.2h-.01a6.6 6.6 0 0 1-3.36-.92l-.24-.14-2.5.66.67-2.44-.16-.25a6.6 6.6 0 1 1 5.6 3.09zm3.62-4.94c-.2-.1-1.17-.58-1.35-.64-.18-.07-.31-.1-.44.1-.13.2-.5.64-.62.77-.11.13-.23.14-.42.05a5.4 5.4 0 0 1-1.6-.99 6 6 0 0 1-1.1-1.37c-.12-.2-.01-.3.09-.4.09-.1.2-.23.3-.35.1-.11.13-.19.2-.32.06-.13.03-.24-.02-.34-.05-.1-.44-1.06-.6-1.45-.16-.38-.32-.33-.44-.33h-.38c-.13 0-.34.05-.51.24-.18.2-.67.65-.67 1.6s.68 1.86.78 1.99c.09.13 1.34 2.05 3.26 2.87.45.2.81.32 1.09.4.46.15.87.13 1.2.08.37-.06 1.17-.48 1.33-.94.17-.46.17-.86.12-.94-.05-.09-.18-.14-.38-.24z"/></svg>
+          <span>Send RSVP</span>
+        </button>
+      </form>
+
+      <p class="rsvp-names reveal-io reveal-up" style="--d:.62s">Kawya &amp; Ushan</p>
+      <p class="rsvp-subtext reveal-io reveal-up" style="--d:.68s">We can&rsquo;t wait to celebrate with you.</p>
+
+      <div class="rsvp-contact reveal-io reveal-up" style="--d:.74s">
         <div class="rsvp-person">
           <div class="rsvp-person-name">Kawya</div>
           <div class="rsvp-person-role">Bride</div>
@@ -2292,6 +2466,97 @@
 
       // release the blob URL shortly after handing off to the OS/browser
       setTimeout(() => URL.revokeObjectURL(url), 4000);
+    });
+  })();
+
+  /* ===================== PREMIUM RSVP FORM ===================== */
+  /* Collects guest name / attendance / message / chosen recipient and
+     opens WhatsApp with a personalised pre-filled message — reusing the
+     exact same phone numbers as the existing direct Call/WhatsApp buttons
+     above, which this form does not touch. */
+  (function(){
+    const form = document.getElementById('rsvpForm');
+    if (!form) return;
+
+    const nameInput = document.getElementById('rsvpGuestName');
+    const messageInput = document.getElementById('rsvpMessage');
+    const attendanceGroup = document.getElementById('rsvpAttendance');
+    const recipientGroup = document.getElementById('rsvpRecipient');
+    const sendBtn = document.getElementById('rsvpSendBtn');
+
+    const RECIPIENTS = {
+      kawya: { name: 'Kawya', phone: '94781272603' },
+      ushan: { name: 'Ushan', phone: '9478596132' }
+    };
+
+    let selectedAttendance = null; // 'yes' | 'no' | null
+    let selectedRecipient = 'kawya';
+
+    attendanceGroup.querySelectorAll('.rsvp-choice').forEach((choice) => {
+      choice.addEventListener('click', () => {
+        selectedAttendance = choice.getAttribute('data-attendance');
+        attendanceGroup.querySelectorAll('.rsvp-choice').forEach((c) => {
+          const on = c === choice;
+          c.classList.toggle('is-selected', on);
+          c.setAttribute('aria-checked', on ? 'true' : 'false');
+        });
+      });
+    });
+
+    recipientGroup.querySelectorAll('.rsvp-recipient-btn').forEach((rBtn) => {
+      rBtn.addEventListener('click', () => {
+        selectedRecipient = rBtn.getAttribute('data-recipient');
+        recipientGroup.querySelectorAll('.rsvp-recipient-btn').forEach((r) => {
+          const on = r === rBtn;
+          r.classList.toggle('is-selected', on);
+          r.setAttribute('aria-checked', on ? 'true' : 'false');
+        });
+      });
+    });
+
+    nameInput.addEventListener('input', () => nameInput.classList.remove('rsvp-invalid'));
+
+    function buildMessage(guestName, attendance, message, recipientName){
+      const lines = [];
+      lines.push(`Hello ${recipientName}! 💛`);
+      lines.push('');
+      lines.push(`This is ${guestName}, RSVP-ing for your wedding.`);
+      if (attendance === 'yes'){
+        lines.push("I'm so excited to celebrate your special day with you! 🎉");
+      } else if (attendance === 'no'){
+        lines.push("I'm so sorry I won't be able to make it, but I'll be thinking of you both! 💛");
+      }
+      if (message){
+        lines.push('');
+        lines.push(`"${message}"`);
+      }
+      lines.push('');
+      lines.push(`With love,`);
+      lines.push(guestName);
+      return lines.join('\n');
+    }
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+
+      const guestName = nameInput.value.trim();
+      if (!guestName){
+        nameInput.classList.add('rsvp-invalid');
+        nameInput.focus();
+        return;
+      }
+
+      const message = messageInput.value.trim();
+      const recipient = RECIPIENTS[selectedRecipient] || RECIPIENTS.kawya;
+      const text = buildMessage(guestName, selectedAttendance, message, recipient.name);
+      const url = `https://wa.me/${recipient.phone}?text=${encodeURIComponent(text)}`;
+
+      sendBtn.classList.remove('rsvp-shimmer');
+      // eslint-disable-next-line no-unused-expressions
+      void sendBtn.offsetWidth; // restart the one-shot shimmer animation
+      sendBtn.classList.add('rsvp-shimmer');
+
+      window.open(url, '_blank', 'noopener,noreferrer');
     });
   })();
 </script>
