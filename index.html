@@ -2075,20 +2075,11 @@
     if (hasOpened) return;
     hasOpened = true;
 
-    // Poster elements fade out one-by-one (button first, names last) via
-    // the staggered CSS transition-delays on .poster-fade-out — they never
-    // fade back in, and the video plays on underneath throughout.
-    posterOverlay.classList.add('poster-fade-out');
-
     // the tap is the single user gesture that unlocks both the intro
     // video AND the music — nothing else prompts for audio afterwards
     bgMusicEl.currentTime = 0;
     const musicPromise = bgMusicEl.play();
     if (musicPromise && musicPromise.catch) musicPromise.catch(()=>{});
-
-    openingVideo.currentTime = 0;
-    const playPromise = openingVideo.play();
-    if (playPromise && playPromise.catch) playPromise.catch(()=>{});
 
     openingVideo.addEventListener('ended', handleVideoEnded, { once:true });
     openingVideo.addEventListener('timeupdate', function backupCheck(){
@@ -2097,6 +2088,66 @@
         handleVideoEnded();
       }
     });
+
+    // ---- Black-screen reliability fix ----
+    // The poster (image + "Tap to Open" text) must stay the visible
+    // fallback until the video has actually confirmed it is rendering
+    // frames — never merely because the button was tapped. Previously
+    // the poster faded out and play() fired in the same instant, so a
+    // slow/not-yet-ready video left a black gap between "poster gone"
+    // and "video visible". Everything else in this function (music,
+    // ended handling, backup timeupdate check) is unchanged.
+    let revealed = false;
+    function revealVideo(){
+      if (revealed) return;
+      revealed = true;
+      posterOverlay.classList.add('poster-fade-out');
+    }
+    // 'playing' fires once frames are actually being rendered — the
+    // real signal to drop the poster, not the play() call itself.
+    openingVideo.addEventListener('playing', revealVideo, { once:true });
+
+    let retried = false;
+    function attemptPlay(){
+      openingVideo.currentTime = 0;
+      const playPromise = openingVideo.play();
+      if (playPromise && playPromise.catch){
+        playPromise.catch(() => {
+          if (!retried){
+            // one safe retry for a transient play() rejection — never
+            // loops beyond this single attempt
+            retried = true;
+            setTimeout(attemptPlay, 250);
+          } else {
+            fallbackToHero();
+          }
+        });
+      }
+    }
+
+    function fallbackToHero(){
+      // Playback could not be started even after the retry — rather
+      // than leaving the guest stuck looking at a blank/held screen,
+      // drop the poster and continue exactly the way the video's own
+      // "ended" event already does.
+      revealVideo();
+      handleVideoEnded();
+    }
+
+    if (openingVideo.readyState >= 3){
+      // already has enough buffered data (preload="auto" + the existing
+      // primeFirstFrame warm-up almost always gets here) — start right
+      // away, identical to the previous behaviour and timing
+      attemptPlay();
+    } else {
+      // not ready yet: keep the poster up and wait for the browser's own
+      // confirmation that playback can proceed, instead of guessing
+      openingVideo.addEventListener('canplay', attemptPlay, { once:true });
+      // safety net only — if the video never becomes playable at all
+      // (e.g. total network failure), don't strand the guest on the
+      // poster forever; move on to the Hero after a generous wait
+      setTimeout(() => { if (!revealed) fallbackToHero(); }, 8000);
+    }
   }
 
   function handleVideoEnded(){
