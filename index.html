@@ -1130,10 +1130,10 @@
     flex-wrap:wrap; gap:0 6px;
     font-family:'Montserrat',sans-serif;
     text-decoration:none;
-    opacity:0.75;
+    opacity:0.92;
     transition:opacity .3s ease;
   }
-  .final-credit-link:active{ opacity:0.95; }
+  .final-credit-link:active{ opacity:0.98; }
   .final-credit-label{
     font-size:0.66rem; letter-spacing:0.08em;
     color:var(--ink-soft);
@@ -1190,11 +1190,51 @@
   }
   #main.zoomed #hero .coverflow{ animation:heroRevealUp 1s cubic-bezier(.22,.68,.2,1) both; animation-delay:.05s; }
   #main.zoomed #hero .hero-dots{ animation:heroRevealSoft .7s ease both; animation-delay:.32s; }
-  #main.zoomed #hero .names-big{ animation:heroRevealUp .95s cubic-bezier(.22,.68,.2,1) both; animation-delay:.4s; }
   #main.zoomed #hero .hero-divider{ animation:heroRevealSoft .6s ease both; animation-delay:.68s; }
-  #main.zoomed #hero .hero-parents{ animation:heroRevealSoft .85s ease both; animation-delay:.78s; }
-  #main.zoomed #hero .scroll-hint{ animation:heroRevealSoft .7s ease both; animation-delay:1.05s; }
+  #main.zoomed #hero .scroll-hint{ animation:heroRevealSoft .7s ease both; animation-delay:5s; }
   #main.zoomed #hero .eyebrow{ animation:heroRevealSoft .7s ease both; animation-delay:0s; }
+
+  /* ---- Hero TEXT entrance — sequential, directional (added on top of the
+     choreography above; .names-big/.hero-parents themselves are no longer
+     animated as single blocks — only these child spans are, per timing
+     spec: Kawya @1.5s from the right, "&" @2.5s, Ushan @3.5s from the
+     left, then each parent line @4.0s/4.4s in the same left/right
+     directions, before the existing .scroll-hint entrance above now
+     plays last at 5s). Fresh keyframes (no blur) so the arrival reads as
+     a clean horizontal slide rather than the blur-up treatment used
+     elsewhere in this pass. */
+  @keyframes heroTextFromRight{
+    from{ opacity:0; transform:translateX(52px); }
+    to{ opacity:1; transform:translateX(0); }
+  }
+  @keyframes heroTextFromLeft{
+    from{ opacity:0; transform:translateX(-52px); }
+    to{ opacity:1; transform:translateX(0); }
+  }
+  @keyframes heroAmpIn{
+    from{ opacity:0; transform:scale(0.92); }
+    to{ opacity:1; transform:scale(1); }
+  }
+  #main.zoomed #hero .names-big .name-line:first-child{
+    animation:heroTextFromRight .85s cubic-bezier(.22,.68,.2,1) both;
+    animation-delay:1.5s;
+  }
+  #main.zoomed #hero .names-big .amp-line{
+    animation:heroAmpIn .6s ease both;
+    animation-delay:2.5s;
+  }
+  #main.zoomed #hero .names-big .name-line:last-child{
+    animation:heroTextFromLeft .85s cubic-bezier(.22,.68,.2,1) both;
+    animation-delay:3.5s;
+  }
+  #main.zoomed #hero .hero-parents .hero-parents-line:first-child{
+    animation:heroTextFromRight .8s cubic-bezier(.22,.68,.2,1) both;
+    animation-delay:4s;
+  }
+  #main.zoomed #hero .hero-parents .hero-parents-line:last-child{
+    animation:heroTextFromLeft .8s cubic-bezier(.22,.68,.2,1) both;
+    animation-delay:4.4s;
+  }
 
   /* ---- Ambient cinematic champagne light ----
      A single, very slow, very low-opacity warm band drifting across the
@@ -1387,9 +1427,10 @@
   @media (prefers-reduced-motion: reduce){
     #main.zoomed #hero .coverflow,
     #main.zoomed #hero .hero-dots,
-    #main.zoomed #hero .names-big,
+    #main.zoomed #hero .names-big .name-line,
+    #main.zoomed #hero .names-big .amp-line,
     #main.zoomed #hero .hero-divider,
-    #main.zoomed #hero .hero-parents,
+    #main.zoomed #hero .hero-parents .hero-parents-line,
     #main.zoomed #hero .scroll-hint,
     #main.zoomed #hero .eyebrow{ animation:none !important; opacity:1 !important; filter:none !important; transform:none !important; }
     .site-light-sweep{ display:none !important; }
@@ -1713,11 +1754,11 @@
           <div class="rsvp-person-name">Ushan</div>
           <div class="rsvp-person-role">Groom</div>
           <div class="rsvp-person-actions">
-            <a class="rsvp-action-btn" href="tel:+94785969132" aria-label="Call Ushan">
+            <a class="rsvp-action-btn" href="tel:+9478596132" aria-label="Call Ushan">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               Call
             </a>
-            <a class="rsvp-action-btn" href="https://wa.me/94785969132" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Ushan">
+            <a class="rsvp-action-btn" href="https://wa.me/9478596132" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Ushan">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0 0 12.05 4a7.94 7.94 0 0 0-6.9 11.9L4 20l4.2-1.1a7.9 7.9 0 0 0 3.85 1h.01a7.94 7.94 0 0 0 5.54-13.58zm-5.55 12.2h-.01a6.6 6.6 0 0 1-3.36-.92l-.24-.14-2.5.66.67-2.44-.16-.25a6.6 6.6 0 1 1 5.6 3.09zm3.62-4.94c-.2-.1-1.17-.58-1.35-.64-.18-.07-.31-.1-.44.1-.13.2-.5.64-.62.77-.11.13-.23.14-.42.05a5.4 5.4 0 0 1-1.6-.99 6 6 0 0 1-1.1-1.37c-.12-.2-.01-.3.09-.4.09-.1.2-.23.3-.35.1-.11.13-.19.2-.32.06-.13.03-.24-.02-.34-.05-.1-.44-1.06-.6-1.45-.16-.38-.32-.33-.44-.33h-.38c-.13 0-.34.05-.51.24-.18.2-.67.65-.67 1.6s.68 1.86.78 1.99c.09.13 1.34 2.05 3.26 2.87.45.2.81.32 1.09.4.46.15.87.13 1.2.08.37-.06 1.17-.48 1.33-.94.17-.46.17-.86.12-.94-.05-.09-.18-.14-.38-.24z"/></svg>
               WhatsApp
             </a>
@@ -1754,7 +1795,7 @@
 
     <!-- FINAL DESIGNER BRANDING -->
     <div class="final-credit-wrap">
-      <a class="final-credit-link reveal-io reveal-up" style="--d:0s" href="https://wa.me/94766527700" target="_blank" rel="noopener" aria-label="Designed with love by Nevinda Rushantha — contact on WhatsApp">
+      <a class="final-credit-link" href="https://wa.me/94766527700" target="_blank" rel="noopener" aria-label="Designed with love by Nevinda Rushantha — contact on WhatsApp">
         <span class="final-credit-label">Designed with &#10084;&#65039; by</span>
         <span class="final-credit-name">Nevinda Rushantha</span>
       </a>
@@ -2486,7 +2527,7 @@
 
     const RECIPIENTS = {
       kawya: { name: 'Kawya', phone: '94781272603' },
-      ushan: { name: 'Ushan', phone: '94785969132' }
+      ushan: { name: 'Ushan', phone: '9478596132' }
     };
 
     let selectedAttendance = null; // 'yes' | 'no' | null
@@ -2520,14 +2561,15 @@
       const lines = [];
       lines.push(`Hello ${recipientName}! 💛`);
       lines.push('');
+      lines.push(`This is ${guestName}, RSVP-ing for your wedding.`);
       if (attendance === 'yes'){
-        lines.push(`I'm ${guestName}. I'm so excited to celebrate your special day with you! 🎉`);
+        lines.push("I'm so excited to celebrate your special day with you! 🎉");
       } else if (attendance === 'no'){
-        lines.push(`I'm ${guestName}. Thank you so much for inviting me. Unfortunately, I won't be able to join you, but I'm wishing you both a beautiful wedding! ❤️`);
+        lines.push("I'm so sorry I won't be able to make it, but I'll be thinking of you both! 💛");
       }
       if (message){
         lines.push('');
-        lines.push(message);
+        lines.push(`"${message}"`);
       }
       lines.push('');
       lines.push(`With love,`);
