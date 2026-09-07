@@ -467,13 +467,19 @@
     inherits: false;
     initial-value: 0deg;
   }
+  /* Single source of truth for the gold journey's length — the JS auto-
+     advance timer reads this same custom property (via getComputedStyle)
+     so the automatic Coverflow transition is always synchronized to
+     exactly one full 360° journey, instead of the two durations being
+     hardcoded separately in CSS and JS and drifting out of sync. */
+  :root{ --cf-gold-duration: 10s; }
   .cf-item::before{
     content:'';
     position:absolute;
     inset:0;
     border-radius:8px; /* matches .cf-item's existing frame radius exactly */
-    padding:2px;
-    background:conic-gradient(from var(--cf-gold-angle), transparent 0deg 300deg, #F4E4B8 328deg, #FFF6E0 344deg, #F4E4B8 352deg, transparent 360deg);
+    padding:2.75px; /* was 2px — slightly thicker travelling light, still a thin ring, not a border */
+    background:conic-gradient(from var(--cf-gold-angle), transparent 0deg 296deg, #F6E7BC 320deg, #FFFCF2 340deg, #F6E7BC 358deg, transparent 360deg);
     -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite:xor;
             mask-composite:exclude;
@@ -483,7 +489,12 @@
   }
   .cf-item.is-active::before{
     opacity:1;
-    animation:cfGoldTravel 10s linear infinite; /* only the single active item ever animates */
+    /* very subtle champagne-gold glow trailing the travelling light itself —
+       the ring is masked to a thin outline everywhere else, so this glow
+       only ever shows near the moving highlight, never as a permanent
+       frame glow */
+    filter:drop-shadow(0 0 3px rgba(244,228,184,0.5));
+    animation:cfGoldTravel var(--cf-gold-duration) linear infinite; /* only the single active item ever animates */
   }
   @keyframes cfGoldTravel{
     to{ --cf-gold-angle:360deg; } /* 360deg reads identically to 0deg, so the loop repeats with no visible seam */
@@ -2047,7 +2058,15 @@
     let autoplayEnabled = false;
     let autoplayTimer = null;
 
-    function holdMs(){ return 5000 + Math.random() * 1000; } // 5–6s per photo
+    // Reads the same --cf-gold-duration custom property the gold travelling-
+    // light animation uses (see CSS), so the automatic advance always waits
+    // for exactly one full 360° gold journey to finish — no more separately
+    // hardcoded durations that can drift out of sync with each other.
+    function holdMs(){
+      const raw = getComputedStyle(document.documentElement).getPropertyValue('--cf-gold-duration').trim();
+      const ms = raw.endsWith('ms') ? parseFloat(raw) : parseFloat(raw) * 1000;
+      return (Number.isFinite(ms) && ms > 0) ? ms : 10000; // fallback matches the gold animation's own default duration
+    }
 
     function resetTimer(){
       if (!autoplayEnabled) return;
