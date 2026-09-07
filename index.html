@@ -2172,9 +2172,17 @@
       const bgPlayPromise = bgVideoEl.play();
       if (bgPlayPromise && bgPlayPromise.catch) bgPlayPromise.catch(()=>{});
 
-      // Butterfly overlay starts alongside the background video — same
-      // one-shot trigger, same muted/loop/playsinline pattern.
-      if (window.startButterflyOverlay) window.startButterflyOverlay();
+      // Butterfly overlay is withheld until the complete Hero text/intro
+      // sequence has finished — i.e. once the "Swipe Down" hint above has
+      // fully appeared. That hint's own CSS entrance is
+      // animation-delay:5s + duration:.7s (see "#main.zoomed #hero
+      // .scroll-hint" and its @keyframes heroRevealSoft), both measured
+      // from this exact moment .zoomed is added — so 5700ms from here is
+      // the same finish line, not a new/invented timing. No other Hero
+      // timing, direction, or easing is touched.
+      setTimeout(() => {
+        if (window.startButterflyOverlay) window.startButterflyOverlay();
+      }, 5700);
 
       musicToggle.classList.add('visible');
 
@@ -2199,17 +2207,19 @@
   /* ===================== BUTTERFLY OVERLAY — CLIENT-SIDE CHROMA KEY ===================== */
   /* Draws the single butterfly <video> onto a fixed canvas on every
      decoded frame, removing the pure-green chroma-key background
-     pixel-by-pixel so only the butterflies remain — a true transparent
-     overlay, no server-side processing and no second video file. Uses
-     requestVideoFrameCallback where available (ties the work to actual
-     decoded frames — 24/s for this clip) and falls back to a plain
-     requestAnimationFrame loop otherwise. Canvas resolution is
+     pixel-by-pixel, then remapping each remaining pixel's luminance onto
+     a champagne/gold duotone (see GOLD_SHADOW/GOLD_HIGHLIGHT below) so
+     every butterfly reads as one consistent soft gold — a true
+     transparent overlay, no server-side processing and no second video
+     file. Uses requestVideoFrameCallback where available (ties the work
+     to actual decoded frames — 24/s for this clip) and falls back to a
+     plain requestAnimationFrame loop otherwise. Canvas resolution is
      deliberately capped well below viewport pixel size to keep this
      per-pixel work cheap on mobile; the result is upscaled via CSS,
      invisible at this layer's low 0.7 opacity. The video's own native
      loop attribute handles the seamless repeat — nothing here trims,
-     reverses, retimes, or adds a fade to the clip. Skipped entirely
-     under prefers-reduced-motion, per the brief. */
+     reverses, or adds a fade to the clip; it plays at its natural 1.0×
+     speed. Skipped entirely under prefers-reduced-motion, per the brief. */
   (function(){
     const video = document.getElementById('butterflyVideo');
     const canvas = document.getElementById('butterflyCanvas');
@@ -2242,6 +2252,17 @@
     // on both mobile and desktop.
     const RENDER_SCALE = 1;
 
+    // Champagne/gold recolor endpoints for the duotone pass below — a
+    // deep warm bronze for shadows up to a pale champagne for highlights.
+    // Precomputed outside the pixel loop for performance.
+    const GOLD_SHADOW = [92, 70, 38];
+    const GOLD_HIGHLIGHT = [248, 222, 172];
+    const GOLD_RANGE = [
+      GOLD_HIGHLIGHT[0] - GOLD_SHADOW[0],
+      GOLD_HIGHLIGHT[1] - GOLD_SHADOW[1],
+      GOLD_HIGHLIGHT[2] - GOLD_SHADOW[2]
+    ];
+
     function drawFrame(){
       const vw = video.videoWidth, vh = video.videoHeight;
       if (!vw || !vh || video.paused || video.ended){
@@ -2264,7 +2285,7 @@
       const frame = ctx.getImageData(dx, dy, dw, dh);
       const data = frame.data;
       // Pure chroma-key threshold with a soft (antialiased) edge band —
-      // no hue shifting, so butterfly colours are never altered.
+      // transparency/shape is decided here, before any recolor below.
       for (let i = 0; i < data.length; i += 4){
         const r = data[i], g = data[i + 1], b = data[i + 2];
         const diff = g - Math.max(r, b);
@@ -2273,6 +2294,19 @@
         } else if (diff > 20){
           data[i + 3] = Math.round(255 * (1 - (diff - 20) / 40));
         }
+        // Champagne/gold recolor — applied AFTER the chroma-key alpha
+        // above, so it never touches transparency, and only runs on the
+        // still-original r/g/b captured at the top of this iteration.
+        // Each pixel's luminance (its existing highlight/shadow/wing-vein
+        // value) is remapped onto the gold duotone range instead of a
+        // flat colour, so shading, highlights and wing detail are all
+        // preserved — every butterfly, whatever its source colour, ends
+        // up the same soft champagne/gold rather than a flat bright
+        // yellow.
+        const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        data[i]     = GOLD_SHADOW[0] + lum * GOLD_RANGE[0];
+        data[i + 1] = GOLD_SHADOW[1] + lum * GOLD_RANGE[1];
+        data[i + 2] = GOLD_SHADOW[2] + lum * GOLD_RANGE[2];
       }
       ctx.putImageData(frame, dx, dy);
       scheduleNext();
@@ -2292,7 +2326,7 @@
       if (started) return;
       started = true;
       resizeCanvas();
-      video.playbackRate = 0.7; // slower, more elegant flight — looping is native, so this rate persists automatically across every repeat
+      video.playbackRate = 1; // 1.0× — looping is native, so this rate persists automatically across every repeat
       const p = video.play();
       if (p && p.catch) p.catch(()=>{});
       scheduleNext();
