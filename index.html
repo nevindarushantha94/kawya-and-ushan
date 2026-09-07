@@ -408,6 +408,7 @@
     -webkit-user-select:none;
     user-select:none;
     flex-shrink:0;
+    isolation:isolate; /* contains the new optional backlight glow below to this element, without altering existing layout/stacking of the photos */
   }
   .cf-track{
     position:relative;
@@ -446,7 +447,68 @@
     pointer-events:none;
     -webkit-user-drag:none;
   }
-  .cf-item.is-active{ box-shadow:0 22px 46px rgba(60,44,18,0.3), 0 4px 14px rgba(60,44,18,0.14); }
+  .cf-item.is-active{
+    box-shadow:
+      0 22px 46px rgba(60,44,18,0.3),
+      0 4px 14px rgba(60,44,18,0.14),
+      0 0 24px 3px rgba(201,168,106,0.32),
+      inset 0 0 0 2px rgba(244,228,184,0.4);
+  }
+
+  /* ===== Hero photo-frame polish: champagne-gold travelling light =====
+     Additive only — does not alter carousel transform/opacity/filter/z-index
+     logic above, which is driven entirely by the existing JS. This just
+     layers a thin conic-gradient ring (masked to the frame's own border
+     radius, so it traces the real frame outline rather than a rectangle
+     sliding across the photo) onto whichever .cf-item currently carries
+     .is-active — the same class the JS already toggles on move. */
+  @property --cf-gold-angle{
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+  }
+  .cf-item::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    border-radius:8px; /* matches .cf-item's existing frame radius exactly */
+    padding:2px;
+    background:conic-gradient(from var(--cf-gold-angle), transparent 0deg 300deg, #F4E4B8 328deg, #FFF6E0 344deg, #F4E4B8 352deg, transparent 360deg);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;
+            mask-composite:exclude;
+    opacity:0; /* side photos: effectively invisible until they become active */
+    pointer-events:none;
+    transition:opacity .6s ease; /* smooth hand-off as the active photo changes */
+  }
+  .cf-item.is-active::before{
+    opacity:1;
+    animation:cfGoldTravel 10s linear infinite; /* only the single active item ever animates */
+  }
+  @keyframes cfGoldTravel{
+    to{ --cf-gold-angle:360deg; } /* 360deg reads identically to 0deg, so the loop repeats with no visible seam */
+  }
+
+  /* ===== Hero photo-frame polish: optional soft champagne backlight =====
+     Very low opacity, slow breathing glow behind the whole photo group.
+     Sits behind the carousel only (z-index:-1, contained by the
+     isolation:isolate added to .coverflow above) — never above the
+     photos or the Hero text. */
+  .coverflow::after{
+    content:'';
+    position:absolute;
+    inset:-14% -8%;
+    z-index:-1;
+    border-radius:50%;
+    background:radial-gradient(closest-side, rgba(201,168,106,0.16), rgba(201,168,106,0.05) 55%, transparent 75%);
+    opacity:0.7;
+    animation:cfBacklightBreathe 9s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes cfBacklightBreathe{
+    0%,100%{ opacity:0.5; }
+    50%{ opacity:0.85; }
+  }
 
   .hero-dots{
     display:flex; justify-content:center; gap:8px;
@@ -534,6 +596,8 @@
   @media (prefers-reduced-motion: reduce){
     .cf-item{ transition:opacity .5s ease; }
     .cf-track.cf-auto-move .cf-item{ transition:opacity .5s ease; }
+    .cf-item.is-active::before{ animation:none; } /* still shows a static gold ring, just no travelling motion */
+    .coverflow::after{ animation:none; opacity:0.6; } /* static faint backlight, no breathing */
   }
 
   /* ================= FULLSCREEN PHOTO VIEWER ================= */
