@@ -241,7 +241,32 @@
      background — nothing depends on the photograph's own contrast. */
   #hero{
     position:relative;
-    min-height:100vh; min-height:100svh; min-height:100dvh;
+    /* min-height was 100vh; 100svh; 100dvh — dvh (dynamic viewport
+       height) was the value that actually won, since it's declared last.
+       dvh is designed to track the browser chrome's CURRENT state, which
+       is exactly the problem here: right when the opening video ends and
+       Hero first appears, iOS Safari's toolbar hasn't finished settling
+       yet, so dvh can briefly measure a bit taller than the toolbar's
+       true resting size. #hero's min-height locks onto that momentarily
+       inflated number, so the box (and the space-evenly gaps within it)
+       are sized for a viewport slightly bigger than what's really
+       settled — reading as the whole composition sitting a touch low.
+       The instant the toolbar finishes settling (a small scroll is
+       enough to trigger this on iOS), dvh drops to its true value and
+       the box/gaps shrink to match, which is the "jumps up, gap appears
+       above" the guest saw.
+       svh (small viewport height) is defined as the height when the
+       browser's UI is at its MOST expanded/visible — i.e. the smallest
+       the viewport can ever be — and, unlike dvh, it does not track the
+       live toolbar-settling animation, so it can't fluctuate the same
+       way at that exact moment. Dropping the dvh line so svh is the
+       final (winning) value for browsers that support it — with vh
+       still there as the fallback for browsers that support neither —
+       means #hero locks onto that one stable number from the first
+       frame, instead of racing Safari's toolbar animation. Nothing about
+       padding, gaps, or child distribution changes; space-evenly and the
+       rest of the composition are exactly as before. */
+    min-height:100vh; min-height:100svh;
     width:100%;
     background:transparent; /* was var(--cream-bg) — now transparent so the
       viewport-level .site-bg-video layer (see below) shows through the Hero
@@ -251,28 +276,7 @@
       moving the video out of #hero: keeping this opaque would silently hide
       the video everywhere, since an element's own background always paints
       above anything positioned behind it. */
-    /* justify-content was space-evenly, which puts an EQUAL gap before
-       the first child (eyebrow) and after the last (scroll-hint), same
-       as the gaps between items — so that leading gap's size is tied to
-       however much leftover vertical space #hero's box happens to have.
-       On iOS Safari, the very first paint right after the opening video
-       ends can briefly measure 100dvh larger than the toolbar's true
-       settled size (the toolbar collapses/expands as the page becomes
-       scrollable), so #hero's box is briefly taller than the real
-       viewport and that top gap grows with it — visually pushing the
-       whole composition down a bit low. The instant the toolbar settles
-       (any small scroll triggers this), dvh recalculates smaller, the
-       box shrinks to match, and that top gap shrinks with it — reading
-       as the content "jumping up" and revealing space above the Hero
-       that wasn't visible a moment earlier.
-       space-between removes the mechanism, not just the symptom: it only
-       ever distributes leftover space into the gaps BETWEEN items, never
-       before the first or after the last, so the eyebrow always sits
-       immediately at padding-top and the swipe-hint always sits
-       immediately at padding-bottom — fixed, regardless of how #hero's
-       measured height fluctuates while Safari's chrome settles. Nothing
-       else about the layout, spacing model, or child sizes changes. */
-    display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+    display:flex; flex-direction:column; align-items:center; justify-content:space-evenly;
     padding:calc(30px + env(safe-area-inset-top)) 26px calc(20px + env(safe-area-inset-bottom));
     text-align:center;
     overflow:hidden;
