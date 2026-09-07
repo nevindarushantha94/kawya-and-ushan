@@ -455,6 +455,26 @@
       inset 0 0 0 2px rgba(244,228,184,0.4);
   }
 
+  /* ===== Hero photo-frame polish: active-photo micro-motion =====
+     Very subtle "alive" breathing zoom on the PHOTO IMAGE itself
+     (not the card) inside whichever .cf-item currently carries
+     .is-active — the same class the JS already toggles on move.
+     Purely additive: does not touch .cf-item's own transform, which
+     stays entirely driven by the existing Coverflow JS. Because this
+     animation only exists on the .is-active selector, it starts fresh
+     from its 0% frame (scale 1, no drift) the instant a photo becomes
+     active, and simply stops — no transition to unwind — the moment
+     .is-active is removed, so side photos are never mid-zoom. */
+  .cf-item img{ transform-origin:50% 42%; }
+  .cf-item.is-active img{
+    animation:cfPhotoBreathe 7s ease-in-out infinite alternate;
+    will-change:transform;
+  }
+  @keyframes cfPhotoBreathe{
+    0%{ transform:scale(1) translate(0,0); }
+    100%{ transform:scale(1.025) translate(0,-0.6%); }
+  }
+
   /* ===== Hero photo-frame polish: champagne-gold travelling light =====
      Additive only — does not alter carousel transform/opacity/filter/z-index
      logic above, which is driven entirely by the existing JS. This just
@@ -609,6 +629,7 @@
     .cf-track.cf-auto-move .cf-item{ transition:opacity .5s ease; }
     .cf-item.is-active::before{ animation:none; } /* still shows a static gold ring, just no travelling motion */
     .coverflow::after{ animation:none; opacity:0.6; } /* static faint backlight, no breathing */
+    .cf-item.is-active img{ animation:none; } /* no photo micro-motion */
   }
 
   /* ================= FULLSCREEN PHOTO VIEWER ================= */
@@ -746,11 +767,43 @@
     to{ transform:scale(1.14); }
   }
 
+  /* ===== Arch photo-frame polish: continuous champagne-gold travelling
+     light ===== Additive only — does not alter the frame's existing
+     photo, crop, dimensions, border-radius/arch shape or positioning.
+     Same masked conic-gradient-ring technique as the Hero Coverflow's
+     gold line (a thin ring traced to the frame's own border-radius, so
+     it follows the real arch perimeter), but implemented as its own
+     separate custom property/keyframes/timing so it can never affect
+     or be affected by the Coverflow's gold-line animation. */
+  @property --bi-gold-angle{
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+  }
+  .bi-frame-photo::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    border-radius:999px 999px 8px 8px; /* matches .bi-frame-photo's existing arch radius exactly */
+    padding:2.5px;
+    background:conic-gradient(from var(--bi-gold-angle), transparent 0deg 300deg, #F6E7BC 322deg, #FFFCF2 340deg, #F6E7BC 358deg, transparent 360deg);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;
+            mask-composite:exclude;
+    filter:drop-shadow(0 0 3px rgba(244,228,184,0.45));
+    pointer-events:none;
+    animation:biGoldTravel 15s linear infinite;
+  }
+  @keyframes biGoldTravel{
+    to{ --bi-gold-angle:360deg; } /* 360deg reads identically to 0deg, so the loop repeats with no visible seam */
+  }
+
   @media (max-width:380px){
     .bi-frame-wrap{ width:min(64vw, 250px); margin-top:42px; }
   }
   @media (prefers-reduced-motion: reduce){
     .bi-frame-photo img{ animation:none !important; }
+    .bi-frame-photo::before{ animation:none; } /* still shows a static gold ring, just no travelling motion */
   }
 
   /* ---- cinematic photo reveal — the arch photo specifically starts a
