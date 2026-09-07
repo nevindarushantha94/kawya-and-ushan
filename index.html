@@ -327,7 +327,17 @@
      and unchanged. Side cards are the same element, just scaled down and
      pushed outward by the JS below, so the "large dominant center photo"
      requirement holds automatically. */
-  :root{ --hero-photo-w: min(70vw, 300px); }
+  /* --hero-photo-w previously scaled purely off viewport WIDTH (vw). On a
+     viewport that's wide but short (landscape phones, some foldables), vw
+     stays large while vh is the actually-constrained dimension, so the
+     card (and the vw-driven name font-size below) never shrank even
+     though vertical room was tight — that's why the Hero could grow
+     taller than the screen and need a scroll on those sizes specifically.
+     Swapping vw -> vmin (the smaller of vw/vh) fixes that: on ordinary
+     portrait phones vmin == vw already (height > width there), so this is
+     visually identical to before; it only kicks in to shrink things on
+     short/landscape viewports, which is exactly the case that needed it. */
+  :root{ --hero-photo-w: min(70vmin, 300px); }
   .coverflow{
     position:relative;
     width:100%;
@@ -393,7 +403,7 @@
     font-family:'Playfair Display',serif;
     font-weight:600;
     display:flex; flex-direction:column; align-items:center;
-    font-size:clamp(1.9rem, 7.4vw, 2.6rem);
+    font-size:clamp(1.9rem, 7.4vmin, 2.6rem);
     line-height:1.16;
     margin:0 0 16px;
     color:var(--ink);
@@ -435,14 +445,29 @@
   /* short-viewport tiers — shrink the frame + type so the whole Hero still
      fits one screen without cramming (same approach as the Chalitha ref) */
   @media (max-height:720px){
-    :root{ --hero-photo-w: min(62vw, 250px); }
-    .names-big{ font-size:clamp(1.7rem, 6.6vw, 2.3rem); }
+    :root{ --hero-photo-w: min(62vmin, 250px); }
+    .names-big{ font-size:clamp(1.7rem, 6.6vmin, 2.3rem); }
   }
   @media (max-height:620px){
     #hero{ padding-top:calc(18px + env(safe-area-inset-top)); }
-    :root{ --hero-photo-w: min(52vw, 210px); }
-    .names-big{ font-size:clamp(1.5rem, 6vw, 2rem); margin-bottom:10px; }
+    :root{ --hero-photo-w: min(52vmin, 210px); }
+    .names-big{ font-size:clamp(1.5rem, 6vmin, 2rem); margin-bottom:10px; }
     .hero-divider{ margin-bottom:10px; }
+  }
+  /* One more step down the same existing shrink-tier ladder above — for
+     viewports shorter than the shortest tier this Hero already had
+     (e.g. phones in landscape, split-screen/multitasking panes). Without
+     this, those sizes fell through to the 620px tier's sizing, which was
+     still occasionally taller than the available height, so the Hero's
+     box grew past one screen and needed a scroll to see the rest of it. */
+  @media (max-height:520px){
+    #hero{
+      padding-top:calc(12px + env(safe-area-inset-top));
+      padding-bottom:calc(12px + env(safe-area-inset-bottom));
+    }
+    :root{ --hero-photo-w: min(44vmin, 180px); }
+    .names-big{ font-size:clamp(1.3rem, 5.2vmin, 1.7rem); margin-bottom:8px; }
+    .hero-divider{ margin-bottom:8px; }
   }
   @media (prefers-reduced-motion: reduce){
     .cf-item{ transition:opacity .5s ease; }
@@ -1446,6 +1471,19 @@
     .scroll-progress{ transition:none; }
   }
 </style>
+
+<!-- ================= VERCEL WEB ANALYTICS =================
+     Official static-HTML implementation (no npm/build step, since this
+     project is plain HTML — not Next.js/React). Loads its own tiny script
+     once, deferred, from the domain Vercel deploys this project to; does
+     not touch/override any existing globals, video, audio, or animation
+     code above/below. Requires Web Analytics to be turned on for this
+     project in the Vercel dashboard (Project -> Analytics -> Enable) —
+     the script alone does nothing on a project where it's still off. -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
