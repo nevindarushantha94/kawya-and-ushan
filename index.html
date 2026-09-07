@@ -497,6 +497,12 @@
     content:'';
     position:absolute;
     inset:0;
+    z-index:2; /* keeps the ring painted above the photo even when the active
+                  photo's own micro-motion transform promotes it into its own
+                  stacking context — without this, an element with a live
+                  transform paints in tree order among stacking-context
+                  siblings, which would otherwise put the (later-in-markup)
+                  <img> on top of this earlier ::before ring, hiding it */
     border-radius:8px; /* matches .cf-item's existing frame radius exactly */
     padding:2.75px; /* was 2px — slightly thicker travelling light, still a thin ring, not a border */
     background:conic-gradient(from var(--cf-gold-angle), transparent 0deg 296deg, #F6E7BC 320deg, #FFFCF2 340deg, #F6E7BC 358deg, transparent 360deg);
@@ -784,6 +790,10 @@
     content:'';
     position:absolute;
     inset:0;
+    z-index:2; /* keeps the ring painted above the photo — the photo's own
+                  existing Ken Burns zoom carries a live transform, which
+                  otherwise promotes the (later-in-markup) <img> above this
+                  earlier ::before ring in paint order and hides it */
     border-radius:999px 999px 8px 8px; /* matches .bi-frame-photo's existing arch radius exactly */
     padding:2.5px;
     background:conic-gradient(from var(--bi-gold-angle), transparent 0deg 300deg, #F6E7BC 322deg, #FFFCF2 340deg, #F6E7BC 358deg, transparent 360deg);
