@@ -332,11 +332,6 @@
     overflow:hidden;
     z-index:0;
     pointer-events:none;
-    /* Deliberately no background/poster painted here by default. The poster
-       is only ever created/composited on confirmed failure (see
-       .bg-video-fallback below) — during normal successful playback this
-       rule stays exactly this simple, so nothing extra is decoded or
-       composited underneath the video. */
   }
   .site-bg-video video{
     position:absolute; inset:0;
@@ -346,17 +341,6 @@
     pointer-events:none;
     opacity:var(--bg-video-opacity);
   }
-  /* ===== Background-video graceful fallback =====
-     Added only when JS has confirmed (once, via a single play()-rejection or
-     'error' handler — see script below) that this browser/device would not
-     play the background video. Only at that point does the poster
-     background actually get painted; the video itself is then hidden so
-     that poster shows through. Zero cost, zero effect on the ordinary
-     successful-playback path. */
-  .site-bg-video.bg-video-fallback{
-    background:var(--bg-poster-url, none) center/cover no-repeat;
-  }
-  .site-bg-video.bg-video-fallback video{ opacity:0; }
   .site-bg-scrim{
     position:absolute; inset:0;
     /* was 0.62 — lowered to ~45% so the background video reads clearly
@@ -1544,27 +1528,15 @@
       rgba(255,244,214,0.42) 50%,
       rgba(255,238,200,0.30) 53%,
       rgba(255,238,200,0) 75%);
-    transform:translateX(0%) rotate(9deg);
+    transform:rotate(9deg);
     filter:blur(9px);
-    will-change:transform; /* runs continuously for the whole session — a
-      genuine, long-lived compositor animation, so promoting it is worthwhile */
     animation:lightSweepMove 17s ease-in-out infinite;
     animation-delay:1.2s;
   }
-  /* Was animating `left` (a layout-triggering property, recomputed every
-     frame for the whole animation's 17s duration, continuously, for the
-     entire session). Converted to `transform:translateX`, which is
-     compositor-only — same visual travel distance, same easing, same
-     timing, same rotate(9deg) throughout, just no per-frame layout/paint.
-     translateX% is relative to the element's OWN width (55% of the fixed
-     viewport-sized parent), so the endpoint is scaled accordingly:
-     original travel was left:-45% -> 115% (of the 100%-wide parent), i.e.
-     160% of the parent's width; expressed as a percentage of this
-     element's own 55%-wide box that is 160/0.55 ≈ 290.91%. */
   @keyframes lightSweepMove{
-    0%{ transform:translateX(0%) rotate(9deg); }
-    50%{ transform:translateX(290.91%) rotate(9deg); }
-    100%{ transform:translateX(0%) rotate(9deg); }
+    0%{ left:-45%; }
+    50%{ left:115%; }
+    100%{ left:-45%; }
   }
 
   /* ---- Cinematic scroll journey indicator ----
@@ -1579,12 +1551,9 @@
   }
   .scroll-progress.visible{ opacity:1; }
   .scroll-progress-bar{
-    height:100%; width:100%;
-    transform-origin:left center;
-    transform:scaleX(0);
+    height:100%; width:0%;
     background:linear-gradient(90deg, rgba(169,130,63,0.5), var(--gold-light) 60%, rgba(201,168,106,0.85));
-    transition:transform .12s linear;
-    will-change:transform; /* updates on every scroll tick for the whole session */
+    transition:width .12s linear;
   }
 
   /* ---- Subtle atmospheric particles (Hero + closing gallery only) ---- */
@@ -2211,9 +2180,6 @@
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let autoplayEnabled = false;
     let autoplayTimer = null;
-    let resizeRAF = null; // rAF-throttles the resize listener below so a
-      // burst of resize events (e.g. mobile browser chrome show/hide)
-      // triggers at most one layout read + render() per frame
 
     // Reads the same --cf-gold-duration custom property the gold travelling-
     // light animation uses (see CSS), so the automatic advance always waits
@@ -2321,10 +2287,7 @@
     stage.addEventListener('pointerup', onUp);
     stage.addEventListener('pointercancel', onUp);
 
-    window.addEventListener('resize', () => {
-      if (resizeRAF) return;
-      resizeRAF = requestAnimationFrame(() => { resizeRAF = null; render(); });
-    });
+    window.addEventListener('resize', render);
 
     window.startHeroAutoplay = function(){
       // Called exactly once, right as #main becomes visible (see
@@ -2381,27 +2344,6 @@
   const bgVideoEl = document.getElementById('bgVideo');
   bgVideoEl.poster = assetUrl('assets/background-poster.jpg');
   bgVideoEl.src = assetUrl('assets/background-video.mp4');
-
-  /* ===== Background-video graceful fallback (iOS Low Power Mode / Android
-     autoplay restrictions) =====
-     Single, event-driven mechanism — no retries, no polling, no timers.
-     1) The poster image is exposed as a CSS variable so the always-present
-        .site-bg-video background (see CSS above) can use the exact same
-        resolved asset path as the <video>'s own poster attribute.
-     2) If the eventual play() call (still triggered only from
-        handleVideoEnded(), exactly as before) is rejected, or the video
-        element ever fires a genuine 'error', a class is added once to
-        reveal that background instead. Nothing here changes when, how, or
-        whether the video is asked to play — only what happens if it can't. */
-  const siteBgVideoEl = document.getElementById('siteBgVideo');
-  siteBgVideoEl.style.setProperty('--bg-poster-url', `url("${assetUrl('assets/background-poster.jpg')}")`);
-  let bgVideoFallbackShown = false;
-  function showBgVideoFallback(){
-    if (bgVideoFallbackShown) return;
-    bgVideoFallbackShown = true;
-    siteBgVideoEl.classList.add('bg-video-fallback');
-  }
-  bgVideoEl.addEventListener('error', showBgVideoFallback, { once:true });
 
   const butterflyVideoEl = document.getElementById('butterflyVideo');
   butterflyVideoEl.src = assetUrl('assets/butterflies-overlay.mp4');
@@ -2532,12 +2474,9 @@
 
       // Background video begins exactly here — never earlier. Its poster
       // (a real frame from the same clip) covers any load/decode delay so
-      // there is no black flash while it spins up. If the browser rejects
-      // autoplay (iOS Low Power Mode, Chrome autoplay restrictions, etc.),
-      // showBgVideoFallback() reveals the poster background in its place —
-      // a single, one-time, non-retrying fallback (see fallback CSS/JS above).
+      // there is no black flash while it spins up.
       const bgPlayPromise = bgVideoEl.play();
-      if (bgPlayPromise && bgPlayPromise.catch) bgPlayPromise.catch(showBgVideoFallback);
+      if (bgPlayPromise && bgPlayPromise.catch) bgPlayPromise.catch(()=>{});
 
       // Butterfly overlay is withheld until the complete Hero text/intro
       // sequence has finished — i.e. once the "Swipe Down" hint above has
@@ -2597,17 +2536,10 @@
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     const MAX_DIM = 480; // internal render-resolution cap — see comment above
     let started = false;
-    let pending = false; // true whenever a rVFC/rAF callback is already queued —
-                          // guarantees this never schedules more than one at a time
-    let lastVw = 0, lastVh = 0; // last viewport size actually used to size the canvas
 
     function resizeCanvas(){
       const vw = window.innerWidth || 1;
       const vh = window.innerHeight || 1;
-      if (vw === lastVw && vh === lastVh) return; // viewport didn't actually
-        // change (e.g. a mobile browser chrome show/hide resize tick that
-        // leaves both dimensions identical) — skip the reallocation entirely
-      lastVw = vw; lastVh = vh;
       const scale = MAX_DIM / Math.max(vw, vh);
       canvas.width = Math.max(1, Math.round(vw * scale));
       canvas.height = Math.max(1, Math.round(vh * scale));
@@ -2638,16 +2570,8 @@
     ];
 
     function drawFrame(){
-      pending = false;
-      // Fully event-driven, never a polling wait: if the tab is hidden or
-      // the video isn't currently playing, stop here and do NOT
-      // re-schedule — the 'play' and 'visibilitychange' listeners below are
-      // what restart the loop once it's actually possible again. (Only the
-      // "video metadata not loaded yet" case below still re-checks shortly,
-      // since that's a brief one-time startup wait, not an ongoing pause.)
-      if (document.hidden || video.paused || video.ended) return;
       const vw = video.videoWidth, vh = video.videoHeight;
-      if (!vw || !vh){
+      if (!vw || !vh || video.paused || video.ended){
         scheduleNext();
         return;
       }
@@ -2695,25 +2619,12 @@
     }
 
     function scheduleNext(){
-      if (pending) return; // never more than one pending callback in flight
-      pending = true;
       if (video.requestVideoFrameCallback){
         video.requestVideoFrameCallback(drawFrame);
       } else {
         requestAnimationFrame(drawFrame);
       }
     }
-
-    // Resume the loop the instant it's actually possible again — always
-    // event-driven, never a timer/poll. Mainly matters for the
-    // requestAnimationFrame fallback path: requestVideoFrameCallback
-    // already stops firing on its own once the video stops producing new
-    // frames, but plain rAF would otherwise keep firing every frame even
-    // while paused/hidden unless something explicitly restarts it here.
-    video.addEventListener('play', () => { if (started) scheduleNext(); });
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && started) scheduleNext();
-    });
 
     // Started from handleVideoEnded, in lockstep with the existing
     // background video — never earlier, never a second trigger.
@@ -2767,43 +2678,30 @@
 
   /* ===================== CINEMATIC SCROLL JOURNEY INDICATOR ===================== */
   /* A very thin champagne progress line — rAF-throttled scroll listener,
-     transform-only update (see .scroll-progress-bar CSS: scaleX instead of
-     width, so this never triggers layout), no layout thrashing. The
-     scrollable document height is measured once and cached, re-measured
-     only on resize/content-visibility changes — never re-read on every
-     scroll tick — per the same "same progress calculation, same 2px
-     appearance" requirement. Fades in once the invitation is actually
-     open (mirrors the music toggle's own .visible timing) and never
-     appears over the cover/tap-to-open screen. */
+     pure transform-free width update, no layout thrashing. Fades in once
+     the invitation is actually open (mirrors the music toggle's own
+     .visible timing) and never appears over the cover/tap-to-open screen. */
   (function(){
     const bar = document.getElementById('scrollProgressBar');
     const wrap = document.getElementById('scrollProgress');
     if (!bar || !wrap) return;
     let ticking = false;
-    let scrollable = 0; // cached (doc.scrollHeight - doc.clientHeight)
-    function measure(){
-      const doc = document.documentElement;
-      scrollable = doc.scrollHeight - doc.clientHeight;
-    }
     function update(){
       ticking = false;
+      const doc = document.documentElement;
+      const scrollable = (doc.scrollHeight - doc.clientHeight);
       const pct = scrollable > 0 ? Math.min(100, Math.max(0, (window.scrollY / scrollable) * 100)) : 0;
-      bar.style.transform = `scaleX(${pct / 100})`;
+      bar.style.width = pct + '%';
     }
-    measure();
     window.addEventListener('scroll', () => {
       if (!ticking){ ticking = true; requestAnimationFrame(update); }
     }, { passive:true });
-    window.addEventListener('resize', () => {
-      measure(); // content/viewport size may have changed — re-cache
-      if (!ticking){ ticking = true; requestAnimationFrame(update); }
-    });
+    window.addEventListener('resize', () => { if (!ticking){ ticking = true; requestAnimationFrame(update); } });
     // reveal only once the invitation has actually opened
     const mainEl = document.getElementById('main');
     const moObserver = new MutationObserver(() => {
       if (mainEl.classList.contains('visible')){
         wrap.classList.add('visible');
-        measure();
         update();
         moObserver.disconnect();
       }
