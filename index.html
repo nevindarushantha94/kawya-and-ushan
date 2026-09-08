@@ -44,6 +44,23 @@
        (e.g. 0.85) if the video is ever too bright/busy behind text;
        1 = current/original brightness, unchanged from before this was added. */
     --bg-video-opacity:1;
+    /* Resolved once, here, at :root — the earliest possible point in the
+       document, several seconds before the opening video even finishes.
+       #hero's padding below reads var(--safe-top/--safe-bottom) instead
+       of calling env(safe-area-inset-*) itself; CSS custom properties
+       inherit their already-computed value down the tree, so #hero
+       simply reuses whatever correct number was resolved here long
+       before it ever performs its own first layout. This matters because
+       #hero's padding used to call env() directly at the exact moment
+       #main first flips from display:none to display:block (right when
+       the opening video ends) — a one-time block-layout calculation. If
+       iOS Safari's safe-area value isn't fully settled at that specific
+       instant, that stale/zero number gets baked into #hero's box for
+       good, which is what let the eyebrow render under the status bar/
+       notch on first paint. Giving the browser the whole opening-video
+       duration up front to resolve this removes that race entirely. */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
   *{box-sizing:border-box;}
   /* ================= MOBILE HORIZONTAL CONTAINMENT ================= */
@@ -325,7 +342,7 @@
        the notch/Dynamic Island area itself is never encroached on, only
        the extra breathing room below it is trimmed. Gap and the
        shorter-viewport tiers are unchanged. */
-    padding:calc(14px + env(safe-area-inset-top)) 26px calc(20px + env(safe-area-inset-bottom));
+    padding:calc(14px + var(--safe-top)) 26px calc(20px + var(--safe-bottom));
     text-align:center;
     overflow:hidden;
   }
@@ -622,7 +639,7 @@
     #hero{ gap:clamp(12px, 2.4vh, 22px); }
   }
   @media (max-height:620px){
-    #hero{ padding-top:calc(18px + env(safe-area-inset-top)); gap:clamp(8px, 1.8vh, 16px); }
+    #hero{ padding-top:calc(18px + var(--safe-top)); gap:clamp(8px, 1.8vh, 16px); }
     :root{ --hero-photo-w: min(52vmin, 210px); }
     .names-big{ font-size:clamp(1.5rem, 6vmin, 2rem); margin-bottom:10px; }
     .hero-divider{ margin-bottom:10px; }
@@ -635,8 +652,8 @@
      box grew past one screen and needed a scroll to see the rest of it. */
   @media (max-height:520px){
     #hero{
-      padding-top:calc(12px + env(safe-area-inset-top));
-      padding-bottom:calc(12px + env(safe-area-inset-bottom));
+      padding-top:calc(12px + var(--safe-top));
+      padding-bottom:calc(12px + var(--safe-bottom));
       gap:clamp(5px, 1.1vh, 10px);
     }
     :root{ --hero-photo-w: min(44vmin, 180px); }
