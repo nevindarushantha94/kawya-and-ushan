@@ -312,7 +312,20 @@
        shrink steps, so the whole Hero still fits one screen on short
        devices. */
     gap:clamp(18px, 3.4vh, 30px);
-    padding:calc(30px + env(safe-area-inset-top)) 26px calc(20px + env(safe-area-inset-bottom));
+    /* Top padding was calc(30px + env(safe-area-inset-top)). None of the
+       shorter-viewport tiers below (max-height:720px/620px/520px) touch
+       padding-top until height drops to 620px or under — so every ordinary
+       modern iPhone (roughly 780-930px logical height) was using this
+       full 30px constant on top of its own safe-area-inset-top. On
+       Dynamic Island devices that inset alone is already ~59px, so the
+       eyebrow ended up starting ~89px below the true top edge — read as
+       "sitting too low, with a large empty gap above." Reducing the
+       constant (30px -> 14px) moves the whole Hero content up while
+       still fully respecting env(safe-area-inset-top) underneath it —
+       the notch/Dynamic Island area itself is never encroached on, only
+       the extra breathing room below it is trimmed. Gap and the
+       shorter-viewport tiers are unchanged. */
+    padding:calc(14px + env(safe-area-inset-top)) 26px calc(20px + env(safe-area-inset-bottom));
     text-align:center;
     overflow:hidden;
   }
@@ -1902,11 +1915,6 @@
 
       <div class="details-grid reveal-io reveal-up" style="--d:.4s">
         <div class="details-item">
-          <div class="details-item-label">Poruwa Ceremony</div>
-          <div class="details-item-time">9:00 AM</div>
-        </div>
-        <div class="details-item-sep" aria-hidden="true"></div>
-        <div class="details-item">
           <div class="details-item-label">Celebration Begins</div>
           <div class="details-item-time">10:00 AM</div>
         </div>
@@ -2788,8 +2796,10 @@
   /* ===================== SAVE THE DATE — .ics download ===================== */
   /* Builds a standards-compliant iCalendar (RFC 5545) VEVENT from the
      same approved wedding details already shown in the Details section
-     above (24 September 2026, Poruwa Ceremony 9:00 AM, Araliya Beach
-     Resort & Spa, Unawatuna) and hands the guest a downloadable .ics
+     above (24 September 2026, 10:00 AM, Araliya Beach Resort & Spa,
+     Unawatuna — the schedule has been simplified to just the public
+     wedding celebration, so no separate Poruwa Ceremony time is
+     referenced here anymore) and hands the guest a downloadable .ics
      file — the browser/OS then takes over exactly as it does for any
      other calendar file, so the guest always confirms Add/Save
      themselves; nothing is added to their calendar silently.
@@ -2822,17 +2832,14 @@
       // ---- the approved wedding details, matching the Details section above ----
       const eventTitle = "Kawya & Ushan's Wedding";
       const venueLine = 'Araliya Beach Resort & Spa, Unawatuna';
-      const poruwaTime = '09:00 AM';
-      // Poruwa Ceremony start. No official end time has been provided for
-      // the wedding, so none is invented here — per RFC 5545, a VEVENT
-      // with a DTSTART and no DTEND/DURATION is valid (treated as a
-      // point-in-time event); we simply omit DTEND below rather than
-      // guess an end time.
-      const dtStartLocal = '20260924T090000';
+      // Wedding celebration start. No official end time has been provided,
+      // so none is invented here — per RFC 5545, a VEVENT with a DTSTART
+      // and no DTEND/DURATION is valid (treated as a point-in-time event);
+      // we simply omit DTEND below rather than guess an end time.
+      const dtStartLocal = '20260924T100000';
 
       const description = icsEscape(
         eventTitle + '\n\n' +
-        'Poruwa Ceremony at ' + poruwaTime + '\n\n' +
         'Venue:\n' + venueLine
       );
 
@@ -2858,23 +2865,17 @@
         'SUMMARY:' + icsEscape(eventTitle),
         'DESCRIPTION:' + description,
         'LOCATION:' + icsEscape(venueLine),
-        // reminder 1 — 7 days before
+        // reminder 1 — 1 day before
         'BEGIN:VALARM',
         'ACTION:DISPLAY',
-        'DESCRIPTION:' + icsEscape("7 Days Left! \uD83D\uDC8D Kawya & Ushan's wedding is almost here."),
-        'TRIGGER:-P7D',
+        'DESCRIPTION:' + icsEscape("Tomorrow's the day! Kawya & Ushan's wedding is tomorrow at 10:00 AM."),
+        'TRIGGER:-P1D',
         'END:VALARM',
-        // reminder 2 — 2 days before
+        // reminder 2 — 1 hour before
         'BEGIN:VALARM',
         'ACTION:DISPLAY',
-        'DESCRIPTION:' + icsEscape("2 Days Left! \u2764\uFE0F We can't wait to celebrate with you."),
-        'TRIGGER:-P2D',
-        'END:VALARM',
-        // reminder 3 — wedding morning 07:00 AM (2 hours before the 9:00 AM start)
-        'BEGIN:VALARM',
-        'ACTION:DISPLAY',
-        'DESCRIPTION:' + icsEscape("Today is the day! Kawya & Ushan's wedding is today. Please join us for the Poruwa Ceremony at 09:00 AM."),
-        'TRIGGER:-PT2H',
+        'DESCRIPTION:' + icsEscape("Almost time! Kawya & Ushan's wedding begins in 1 hour."),
+        'TRIGGER:-PT1H',
         'END:VALARM',
         'END:VEVENT',
         'END:VCALENDAR'
