@@ -332,6 +332,11 @@
     overflow:hidden;
     z-index:0;
     pointer-events:none;
+    background:var(--bg-poster-url, none) center/cover no-repeat; /* always-present, zero-cost
+      safety net painted directly behind the video element itself. Invisible whenever the video
+      is actually rendering (it's opaque and fills this same box) — only ever becomes visible if
+      the video fails to paint for any reason. --bg-poster-url is set once from JS below, reusing
+      the same assetUrl() path resolution already used for the video's own poster attribute. */
   }
   .site-bg-video video{
     position:absolute; inset:0;
@@ -341,6 +346,14 @@
     pointer-events:none;
     opacity:var(--bg-video-opacity);
   }
+  /* ===== Background-video graceful fallback =====
+     Added only when JS has confirmed (once, via a single play()-rejection or
+     'error' handler — see script below) that this browser/device would not
+     play the background video. Hides the video element so the poster
+     background painted on .site-bg-video above shows through instead.
+     Never applied during normal successful playback, so it has zero effect
+     on the ordinary case. */
+  .site-bg-video.bg-video-fallback video{ opacity:0; }
   .site-bg-scrim{
     position:absolute; inset:0;
     /* was 0.62 — lowered to ~45% so the background video reads clearly
@@ -2345,6 +2358,27 @@
   bgVideoEl.poster = assetUrl('assets/background-poster.jpg');
   bgVideoEl.src = assetUrl('assets/background-video.mp4');
 
+  /* ===== Background-video graceful fallback (iOS Low Power Mode / Android
+     autoplay restrictions) =====
+     Single, event-driven mechanism — no retries, no polling, no timers.
+     1) The poster image is exposed as a CSS variable so the always-present
+        .site-bg-video background (see CSS above) can use the exact same
+        resolved asset path as the <video>'s own poster attribute.
+     2) If the eventual play() call (still triggered only from
+        handleVideoEnded(), exactly as before) is rejected, or the video
+        element ever fires a genuine 'error', a class is added once to
+        reveal that background instead. Nothing here changes when, how, or
+        whether the video is asked to play — only what happens if it can't. */
+  const siteBgVideoEl = document.getElementById('siteBgVideo');
+  siteBgVideoEl.style.setProperty('--bg-poster-url', `url("${assetUrl('assets/background-poster.jpg')}")`);
+  let bgVideoFallbackShown = false;
+  function showBgVideoFallback(){
+    if (bgVideoFallbackShown) return;
+    bgVideoFallbackShown = true;
+    siteBgVideoEl.classList.add('bg-video-fallback');
+  }
+  bgVideoEl.addEventListener('error', showBgVideoFallback, { once:true });
+
   const butterflyVideoEl = document.getElementById('butterflyVideo');
   butterflyVideoEl.src = assetUrl('assets/butterflies-overlay.mp4');
 
@@ -2474,9 +2508,12 @@
 
       // Background video begins exactly here — never earlier. Its poster
       // (a real frame from the same clip) covers any load/decode delay so
-      // there is no black flash while it spins up.
+      // there is no black flash while it spins up. If the browser rejects
+      // autoplay (iOS Low Power Mode, Chrome autoplay restrictions, etc.),
+      // showBgVideoFallback() reveals the poster background in its place —
+      // a single, one-time, non-retrying fallback (see fallback CSS/JS above).
       const bgPlayPromise = bgVideoEl.play();
-      if (bgPlayPromise && bgPlayPromise.catch) bgPlayPromise.catch(()=>{});
+      if (bgPlayPromise && bgPlayPromise.catch) bgPlayPromise.catch(showBgVideoFallback);
 
       // Butterfly overlay is withheld until the complete Hero text/intro
       // sequence has finished — i.e. once the "Swipe Down" hint above has
